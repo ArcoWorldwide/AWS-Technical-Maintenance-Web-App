@@ -1,8 +1,12 @@
 @font-face {
     font-family: 'grandis';
+    
     src: url('./assets/grandis/Grandis\ Black.otf') format('otf'),
          url('./assets/grandis/Grandis\ Bold.otf') format('otf');
     font-weight: normal;
     font-style: normal;
   }
-  
+  body {
+  margin: 0 !important;
+  padding: 0 !important;
+}

@@ -1,178 +1,275 @@
-import SuperAdminLineChart from "../../components/charts/SuperadminLineChart";
-import SuperadminPieChart from "../../components/charts/SuperAdminPieChart";
-import Table from "../../components/reusables/table/Table";
-import DashboardTimeline from "../../components/superadmin/DashboardTimeline";
-import { BiChart } from "react-icons/bi";
-const data = [
-  {
-    id: 1,
-    school: "school 1",
-    categories: "Nursery, Primary, Secondary",
-    size: "800",
-    features: "Only core",
-    payment: "$2,000",
-  },
-  {
-    id: 2,
-    school: "school 2",
-    categories: "Nursery, Primary",
-    size: "800",
-    features: "Only core",
-    payment: "$2,000",
-  },
-  {
-    id: 3,
-    school: "school 3",
-    categories: "Nursery, Primary, Secondary",
-    size: "800",
-    features: "Only core",
-    payment: "$2,000",
-  },
+import { BiChart, BiBattery } from "react-icons/bi";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+} from "recharts";
+
+// =================== DATA ===================
+const maintenanceData = [
+  { month: "Jan", requests: 180 },
+  { month: "Feb", requests: 220 },
+  { month: "Mar", requests: 200 },
+  { month: "Apr", requests: 250 },
+  { month: "May", requests: 270 },
+  { month: "Jun", requests: 300 },
 ];
-const broadcast_column = [
-  {
-    title: "School",
-    key: "school",
-    render: (data) => (
-      <p className="flex   gap-2">
-        {" "}
-        <img className="" src="/person.svg" /> {data.school}
-      </p>
-    ),
-  },
-  {
-    title: "Categories",
-    key: "categories",
-    render: (data) => (
-      <div className="flex space-x-1">
-        {data.categories.split(", ").map((category, index) => (
-          <span
-            key={index}
-            className={` ${
-              index === 0 && "-ml-4"
-            } - bg-[#E6F2FF] text-black p-1 h-6 w-6 flex items-center justify-center rounded-full`}
+
+/* ----------- UPDATED PIE DATA (BATTERY STATUS) ----------- */
+
+const batteryStatusData = [
+  { name: "Commissioned", value: 45 },
+  { name: "In Use", value: 35 },
+  { name: "Decommissioned", value: 20 },
+];
+
+const BATTERY_COLORS = ["#007BFF", "#40B869", "#FF3B30"];
+
+const requestsData = [
+  { id: "REQ-001", aircraft: "Quadcopter UAV", site: "Port Harcourt", hours: 12, maintenance: "Battery Check", severity: "High", status: "In Progress", actions: "View", submittedBy: "EAndrew" },
+  { id: "REQ-002", aircraft: "Fixed-Wing Drone", site: "Lagos", hours: 8, maintenance: "Propeller Replacement", severity: "Medium", status: "Pending", actions: "View", submittedBy: "PJames" },
+  { id: "REQ-003", aircraft: "Hexacopter UAV", site: "Abuja", hours: 15, maintenance: "Motor Inspection", severity: "Low", status: "Completed", actions: "View", submittedBy: "Tunde" },
+  { id: "REQ-004", aircraft: "Fixed-Wing Drone", site: "Port Harcourt", hours: 10, maintenance: "Software Update", severity: "Medium", status: "Rejected", actions: "View", submittedBy: "Sammie" },
+  { id: "REQ-005", aircraft: "Quadcopter UAV", site: "Lagos", hours: 7, maintenance: "Battery Check", severity: "High", status: "Pending", actions: "View", submittedBy: "Tim" },
+];
+
+/* ----------- UPDATED FLEET SUMMARY DATA ----------- */
+
+const fleetSummaryData = [
+  { aircraft: "In Use", total: 18 },
+  { aircraft: "Grounded", total: 6 },
+  { aircraft: "Under Maintenance", total: 9 },
+];
+
+// =================== TABLE COMPONENT ===================
+const Table = ({ columns, data, onRowClick }) => (
+  <div className="overflow-x-auto">
+    <table className="min-w-full border border-gray-200 rounded-lg divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          {columns.map((col) => (
+            <th
+              key={col.key}
+              className="text-left px-3 py-2 text-xs text-gray-600 whitespace-nowrap"
+            >
+              {col.title}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody className="bg-white divide-y divide-gray-100">
+        {data.map((row) => (
+          <tr
+            key={row.id || row.aircraft}
+            className="hover:bg-gray-50 transition-colors cursor-pointer"
+            onClick={() => onRowClick && onRowClick(row)}
           >
-            {/* {index} */}
-            {category.charAt(0)}
-          </span>
+            {columns.map((col) => (
+              <td
+                key={col.key}
+                className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap"
+              >
+                {col.render ? col.render(row) : row[col.key]}
+              </td>
+            ))}
+          </tr>
         ))}
-      </div>
-    ),
-  },
-  {
-    title: "Size",
-    key: "size",
-    render: (data) => <span className="min-w-[10rem]">{data.size}</span>,
-  },
-  {
-    title: "Features",
-    key: "features",
-    render: (data) => (
-      <span className="min-w-[10rem]">{data.features ?? "Not Available"}</span>
-    ),
-  },
-  {
-    title: "Payment",
-    key: "payment",
-    render: (data) => <span>{data.payment ?? "Not Available"}</span>,
-  },
-];
+      </tbody>
+    </table>
+  </div>
+);
+
+// =================== LINE CHART COMPONENT ===================
+const LineChartComponent = () => (
+  <ResponsiveContainer width="100%" height={265}>
+    <LineChart data={maintenanceData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+      <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#6E7479" }} />
+      <YAxis tick={{ fontSize: 10, fill: "#6E7479" }} />
+      <Tooltip contentStyle={{ borderRadius: "6px", border: "none" }} />
+      <Line type="monotone" dataKey="requests" stroke="#007BFF" strokeWidth={2.5} dot={{ r: 4 }} />
+    </LineChart>
+  </ResponsiveContainer>
+);
+
+// =================== PIE CHART COMPONENT ===================
+const PieChartComponent = () => (
+  <div className="flex flex-col items-center">
+    <ResponsiveContainer width="100%" height={200}>
+      <PieChart>
+        <Pie
+          data={batteryStatusData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          outerRadius={70}
+          label
+          labelLine={false}
+        >
+          {batteryStatusData.map((entry, index) => (
+            <Cell
+              key={`cell-${index}`}
+              fill={BATTERY_COLORS[index % BATTERY_COLORS.length]}
+            />
+          ))}
+        </Pie>
+      </PieChart>
+    </ResponsiveContainer>
+
+    <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-700">
+      {batteryStatusData.map((entry, idx) => (
+        <div key={idx} className="flex items-center gap-1">
+          <span
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: BATTERY_COLORS[idx] }}
+          ></span>
+          {entry.name} ({entry.value}%)
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+  /* -------- UPDATED FLEET SUMMARY TABLE -------- */
+
+  const fleetColumns = [
+    { title: "Fleet Status", key: "aircraft" },
+    { title: "Total", key: "total" },
+  ];
+
+  const handleRowClick = (row) => {
+    alert(
+      `Request Info:\nAircraft: ${row.aircraft}\nSite: ${row.site}\nMaintenance: ${row.maintenance}\nStatus: ${row.status}`
+    );
+  };
+
+// =================== DASHBOARD ===================
 export default function Dashboard() {
+  const requestColumns = [
+    { title: "Aircraft", key: "aircraft" },
+    { title: "Site", key: "site" },
+    { title: "Hours", key: "hours" },
+    { title: "Maintenance", key: "maintenance" },
+    { title: "Severity", key: "severity" },
+    {
+      title: "Status",
+      key: "status",
+      render: (data) => {
+        let bgColor = "", textColor = "";
+        switch (data.status) {
+          case "Pending": bgColor = "bg-yellow-100"; textColor = "text-yellow-600"; break;
+          case "In Progress": bgColor = "bg-blue-100"; textColor = "text-blue-600"; break;
+          case "Completed": bgColor = "bg-green-100"; textColor = "text-green-600"; break;
+          case "Rejected": bgColor = "bg-red-100"; textColor = "text-red-600"; break;
+          default: bgColor = "bg-gray-100"; textColor = "text-gray-600";
+        }
+        return <span className={`px-2 py-0.5 text-[10px] rounded-full font-medium ${bgColor} ${textColor}`}>{data.status}</span>;
+      },
+    },
+    { title: "Actions", key: "actions" },
+    { title: "Submitted By", key: "submittedBy" },
+  ];
+
+  const topAircraftColumns = [
+    { title: "Aircraft", key: "aircraft" },
+    { title: "Completed Requests", key: "completedRequests" },
+  ];
+
+  const handleRowClick = (row) => {
+    alert(`Request Info:\nAircraft: ${row.aircraft}\nSite: ${row.site}\nMaintenance: ${row.maintenance}\nStatus: ${row.status}`);
+  };
+
   return (
-    <section className="">
-      <div className=" grid xl:grid-cols-3  grid-cols-1 gap-x-8 gap-y-8 ">
-        <div className="xl:col-span-2 col-span-1 flex flex-col space-y-10 rounded-2xl">
-          <div className="rounded-2xl flex-grow flex bg-white w-full justify-between items-start p-3 shadow-md">
-            <div className="space-y-5 w-full">
-              <h3 className="">No of Schools</h3>
-              <h2 className="text-4xl text-[#6E7479] font-semibold ">1500</h2>
-              <div className="flex justify-between w-full">
-                <p className="p-2 text-sm bg-[#F2F5F7] rounded-full">
-                  Admins: 10,000
-                </p>
-                <p className="p-2 text-sm bg-[#F2F5F7] rounded-full">
-                  Staff: 20,000
-                </p>
-                <p className="p-2 text-sm bg-[#F2F5F7] rounded-full">
-                  Students: 50,000
-                </p>
-                <p className="p-2 text-sm bg-[#F2F5F7] rounded-full">
-                  Parents: 20,000
-                </p>
-                <p className="p-2 text-sm bg-[#F2F5F7] rounded-full">
-                  Total: 100,000
-                </p>
+    <section className="md:ml-[220px] px-4 sm:px-6 py-6 min-h-screen">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        {/* LEFT MAIN CONTENT */}
+        <div className="xl:col-span-2 flex flex-col gap-6">
+
+          {/* SUMMARY CARD */}
+          <div className="bg-white rounded-xl mt-3 p-4 flex justify-between items-center gap-4 shadow-md">
+            <div className="space-y-1 w-full">
+              <h3 className="text-xs text-gray-500">Total Maintenance Requests</h3>
+              <h2 className="text-2xl font-semibold text-gray-700">1,500</h2>
+              <div className="flex flex-wrap gap-1">
+                <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-600">Pending: 320</span>
+                <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-600">In Progress: 410</span>
+                <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-600">Completed: 230</span>
+                <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600">Rejected: 75</span>
               </div>
             </div>
-            <div className="bg-[#E6F2FF]  rounded-xl p-1 flex items-center justify-center">
-              <img src="/3d.svg" className="w-10 h-10 object-cover" alt="" />
+            <div className="bg-blue-50 rounded-lg p-3 flex items-center justify-center">
+              <BiBattery className="text-blue-500 w-8 h-8" />
             </div>
           </div>
 
-          <div className="flex xl:flex-row flex-col gap-10">
-            <div className="rounded-2xl flex bg-white border w-full  justify-between items-start p-3 shadow-md">
-              <div className="space-y-5 w-full">
-                <h3 className="font-semibold text-[#6E7479]">Paid Invoice</h3>
-                <h2 className="text-4xl text-[#6E7479] font-semibold ">
-                  $43,846
-                </h2>
-                <div className="flex items-center w-full">
-                  <p className="p-2 text-sm bg-[#E7F6EC] text-[#40B869] rounded-full flex items-center gap-x-2">
-                    <BiChart /> 12.48%
-                  </p>
-                  <p className="p-2 text-sm  rounded-full">
-                    Compared to last month
-                  </p>
-                </div>
-              </div>
-              <div className="bg-[#E6F2FF] rounded-xl p-1 flex items-center justify-center">
-                <img src="/3d.svg" className="w-10 h-10 object-cover" alt="" />
+          {/* METRIC CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl p-4 flex flex-col justify-between shadow-md">
+              <h3 className="text-xs text-gray-500 mb-1">Approved Requests</h3>
+              <h2 className="text-xl font-semibold text-gray-700 mb-1">540</h2>
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span className="px-2 py-0.5 bg-green-100 text-green-600 rounded-full flex items-center gap-1">
+                  <BiChart /> 12.4%
+                </span>
+                vs last month
               </div>
             </div>
-            <div className="rounded-2xl flex bg-white border w-full justify-between items-start p-3 shadow-md">
-              <div className="space-y-5 w-full">
-                <h3 className="text-[#6E7479] font-semibold">Subscriptions</h3>
-                <h2 className="text-4xl text-[#6E7479] font-semibold ">1380</h2>
-                <div className="flex justify-between w-full">
-                  <p className="p-2 text-sm bg-[#F2F5F7] rounded-full">
-                    Admins: 10,000
-                  </p>
-                  <p className="p-2 text-sm bg-[#F2F5F7] rounded-full">
-                    Staff: 20,000
-                  </p>
-                </div>
-              </div>
-              <div className="bg-[#E6F2FF] rounded-xl p-1 flex items-center justify-center">
-                <img src="/3d.svg" className="w-10 h-10 object-cover" alt="" />
+            <div className="bg-white rounded-xl p-4 flex flex-col justify-between shadow-md">
+              <h3 className="text-xs text-gray-500 mb-1">Active Engineers & Pilots</h3>
+              <h2 className="text-xl font-semibold text-gray-700 mb-1">1,380</h2>
+              <div className="flex flex-wrap gap-1 text-xs">
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">Engineers: 420</span>
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-full">Pilots: 960</span>
               </div>
             </div>
           </div>
 
-          <div className="graph bg-white border rounded-2xl shadow-md p-2">
-            <h3 className="text-[#8E959C] font-semibold">Cloud Traffic</h3>
-            <SuperAdminLineChart />
+          {/* LINE CHART */}
+          <div className="bg-white rounded-xl p-4 shadow-md">
+            <h3 className="text-xs text-gray-500 font-semibold mb-1">Maintenance Requests Over Months</h3>
+            <LineChartComponent />
           </div>
-        </div>
-        {/* Second col Timeline */}
-        <div className="col-span-1 flex flex-col">
-          <div className="rounded-2xl flex-grow space-y-2 bg-white justify-between p-4 shadow-md">
-            <h2 className="font-semibold text-[#8E959C] ">Notifications</h2>
-            <DashboardTimeline />
-          </div>
-        </div>
-        <div className="xl:col-span-2 col-span-1 flex flex-col">
-          <div className="rounded-2xl space-y-4 border  flex-grow p-4 shadow-md text-[#8E959C]">
-            <h2 className="text-[#8E959C] font-semibold"> Recent Clients</h2>
-            <Table columns={broadcast_column ?? []} data={data ?? []} />
-          </div>
-        </div>
-        <div className="chart col-span-1 flex flex-col">
-          <div className="bg-white border p-4 mt-10 shadow-md rounded-2xl flex-grow">
-            <h3 className="text-[#8E959C] font-semibold">User Percentage</h3>
 
-            <SuperadminPieChart />
+        </div>
+
+        {/* RIGHT SIDEBAR */}
+        <div className="flex flex-col gap-4">
+
+          {/* UPDATED FLEET SUMMARY */}
+          <div className="bg-white mt-3 rounded-xl p-4 shadow-md overflow-x-auto">
+            <h2 className="text-xs text-gray-500 font-semibold mb-2">
+              Fleet Summary
+            </h2>
+            <Table columns={fleetColumns} data={fleetSummaryData} />
+          </div>
+
+
+          {/* UPDATED PIE CHART */}
+          <div className="bg-white rounded-xl p-4 shadow-md">
+            <h3 className="text-xs text-gray-500 font-semibold mb-2">
+              Battery Status Distribution
+            </h3>
+            <PieChartComponent />
           </div>
         </div>
+
+        {/* FULL WIDTH RECENT MAINTENANCE REQUESTS TABLE */}
+        <div className="xl:col-span-3 mt-6">
+          <div className="bg-white rounded-xl p-4 shadow-md overflow-x-auto">
+            <h2 className="text-xs text-gray-500 font-semibold mb-2">Recent Maintenance Requests</h2>
+            <Table columns={requestColumns} data={requestsData.slice(0, 5)} onRowClick={handleRowClick} />
+          </div>
+        </div>
+
       </div>
     </section>
   );

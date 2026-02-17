@@ -1,11 +1,13 @@
 @font-face {
     font-family: 'Grandis';
     src:url('./assets/grandis/Grandis-Medium.woff2') format('woff2');
-    /* url('./assets/grandis/Grandis-Medium.woff2') format('woff2'); */
     font-weight: normal;
     font-style: normal;
   }
-  
+  body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
   body {
     font-family: 'Grandis', sans-serif;
   }

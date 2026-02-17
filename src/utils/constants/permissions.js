@@ -1,0 +1,38 @@
+// permissions.js
+
+export const ROLES = {
+  ADMIN: "admin",
+  TECHNICAL: "technical",
+  GENERAL: "general",
+};
+
+export const PERMISSIONS = {
+  UPLOAD_REPORT: "upload_report",
+  APPROVE_MAINTENANCE: "approve_maintenance",
+  REQUEST_MAINTENANCE: "request_maintenance",
+  EDIT_FLEET: "edit_fleet",
+  VIEW_REPORTS: "view_reports",
+  MANAGE_USERS: "manage_users",
+};
+
+export const rolePermissions = {
+  [ROLES.ADMIN]: [
+    PERMISSIONS.UPLOAD_REPORT,
+    PERMISSIONS.APPROVE_MAINTENANCE,
+    PERMISSIONS.REQUEST_MAINTENANCE,
+    PERMISSIONS.EDIT_FLEET,
+    PERMISSIONS.VIEW_REPORTS,
+    PERMISSIONS.MANAGE_USERS,
+  ],
+
+  [ROLES.TECHNICAL]: [
+    PERMISSIONS.UPLOAD_REPORT,
+    PERMISSIONS.REQUEST_MAINTENANCE,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+
+  [ROLES.GENERAL]: [
+    PERMISSIONS.REQUEST_MAINTENANCE,
+    PERMISSIONS.VIEW_REPORTS,
+  ],
+};
