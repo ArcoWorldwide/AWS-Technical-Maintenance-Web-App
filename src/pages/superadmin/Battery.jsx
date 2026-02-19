@@ -342,49 +342,66 @@ export default function BatteryPage() {
   return (
     <main className="min-h-screen px-4 sm:px-6 py-6 md:pl-[240px]">
 
-      {/* HEADER */}
-      <div className="max-w-[1600px] mx-auto bg-white rounded-2xl shadow p-6 flex justify-between items-center">
-        <h1 className="text-xl font-bold">
-          Battery Lifecycle Management
-        </h1>
+{/* HEADER */}
+<div className="max-w-[1600px] mx-auto bg-white rounded-2xl shadow 
+                px-4 py-4 sm:p-6 
+                flex justify-between items-center">
 
-      {/* ACTION BUTTONS 
-        {tab === "IN_USE" && (
-          <CanAccess permission={PERMISSIONS.EDIT_FLEET}>
-            <button
-              onClick={() => setShowAssignModal(true)}
-              className="flex items-center gap-2 bg-[#3C498B] text-white px-4 py-2 rounded-xl text-sm"
-            >
-              <FiPlus />
-              Assign Battery
-            </button>
-          </CanAccess>
-        )}
-          */}
+  {/* Responsive Header Text */}
+  <h1 className="text-base sm:text-xl font-semibold sm:font-bold">
+    Battery Lifecycle Management
+  </h1>
 
-        {tab === "IN_STORE" && (
-          <CanAccess permission={PERMISSIONS.EDIT_FLEET}>
-            <button
-              onClick={() => setShowPurchaseModal(true)}
-              className="flex items-center gap-2 bg-[#3C498B] text-white px-4 py-2 rounded-xl text-sm"
-            >
-              <FiPlus />
-              Add Purchased Battery
-            </button>
-          </CanAccess>
-        )}
-      </div>
+  {tab === "IN_STORE" && (
+    <CanAccess permission={PERMISSIONS.EDIT_FLEET}>
+      
+      {/* Desktop Button */}
+      <button
+        onClick={() => setShowPurchaseModal(true)}
+        className="hidden sm:flex items-center gap-2 
+                   bg-[#3C498B] text-white 
+                   px-4 py-2 rounded-xl text-sm 
+                   hover:opacity-90 transition"
+      >
+        <FiPlus />
+        Add Purchased Battery
+      </button>
 
-      {/* SEARCH */}
-      <div className="max-w-[1600px] mx-auto mt-4 bg-white rounded-xl shadow px-4 py-3 flex items-center gap-3">
-        <FiSearch />
-        <input
-          placeholder="Search by tag or aircraft number..."
-          className="w-full outline-none text-sm"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      {/* Mobile Icon Button */}
+      <button
+        onClick={() => setShowPurchaseModal(true)}
+        className="sm:hidden flex items-center justify-center
+                   bg-[#3C498B] text-white 
+                   p-1 rounded-sm 
+                   hover:opacity-90 transition"
+        aria-label="Add Purchased Battery"
+      >
+        <FiPlus size={18} />
+      </button>
+
+    </CanAccess>
+  )}
+</div>
+
+
+{/* SEARCH */}
+<div className="max-w-[1600px] mx-auto mt-4 
+                bg-white rounded-xl shadow 
+                px-3 sm:px-4 
+                py-2 sm:py-3 
+                flex items-center gap-2 sm:gap-3">
+
+  <FiSearch className="text-sm sm:text-base" />
+
+  <input
+    placeholder="Search by tag or aircraft number..."
+    className="w-full outline-none 
+               text-xs sm:text-sm"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+</div>
+
 
       {/* TABS */}
       <div className="max-w-[1600px] mx-auto mt-4 flex gap-2 flex-wrap">

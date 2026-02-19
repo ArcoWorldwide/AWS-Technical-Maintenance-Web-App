@@ -227,66 +227,104 @@ export default function FleetPage() {
 
   return (
     <main className="relative min-h-screen px-4 sm:px-6 py-6 md:pl-[240px]">
-      <div className="bg-white rounded-2xl p-4 sm:p-5 md:p-6 shadow flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-  <div>
-    <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
-      Fleet Management
-    </h1>
-    <p className="text-xs sm:text-sm text-gray-500">
-      UAV lifecycle monitoring & maintenance overview
-    </p>
-  </div>
+<div className="bg-white rounded-2xl shadow 
+                px-4 py-4 sm:p-5 md:p-6 
+                flex flex-col gap-4">
 
-  {/* Buttons Section */}
-  <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-    <select
-      className="
-        border rounded-lg 
-        px-2 py-1 
-        sm:px-3 sm:py-1.5 
-        md:px-3 md:py-2 
-        text-xs sm:text-sm
-      "
-      value={filter}
-      onChange={(e) => setFilter(e.target.value)}
-    >
-      <option value="ALL">All</option>
-      <option value="In Service">In Service</option>
-      <option value="Under Maintenance">Under Maintenance</option>
-      <option value="Grounded">Grounded</option>
-    </select>
+  {/* Top Section */}
+  <div className="flex flex-col sm:flex-row 
+                  sm:items-center sm:justify-between 
+                  gap-3">
 
-    <CanAccess permission={PERMISSIONS.EDIT_FLEET}>
-      <button
-        onClick={() => setShowAddModal(true)}
+    {/* Title Section */}
+    <div>
+      <h1 className="text-lg sm:text-2xl font-semibold sm:font-bold text-gray-800">
+        Fleet Management
+      </h1>
+      <p className="text-[11px] sm:text-sm text-gray-500 mt-1">
+        UAV lifecycle monitoring & maintenance overview
+      </p>
+    </div>
+
+    {/* Controls */}
+    <div className="flex items-center gap-2 sm:gap-3">
+
+      {/* Filter */}
+      <select
         className="
-          flex items-center gap-1 sm:gap-2
-          bg-[#3C498B] text-white
-          px-2 py-1
-          sm:px-3 sm:py-1.5
-          md:px-4 md:py-2
-          rounded-lg
+          border rounded-sm 
+          px-2 py-1 
+          sm:px-3 sm:py-1.5 
           text-xs sm:text-sm
+          w-full sm:w-auto
         "
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
       >
-        <FiPlus className="text-sm sm:text-base" />
-        <span>Add Aircraft</span>
-      </button>
-    </CanAccess>
+        <option value="ALL">All</option>
+        <option value="In Service">In Service</option>
+        <option value="Under Maintenance">Under Maintenance</option>
+        <option value="Grounded">Grounded</option>
+      </select>
+
+      <CanAccess permission={PERMISSIONS.EDIT_FLEET}>
+        
+        {/* Desktop Button */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="
+            hidden sm:flex items-center gap-2
+            bg-[#3C498B] text-white
+            px-4 py-2
+            rounded-lg
+            text-sm
+            hover:opacity-90 transition
+          "
+        >
+          <FiPlus />
+          Add Aircraft
+        </button>
+
+        {/* Mobile Icon Button */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="
+            sm:hidden flex items-center justify-center
+            bg-[#3C498B] text-white
+            p-1.5
+            rounded-sm
+            hover:opacity-90 transition
+          "
+          aria-label="Add Aircraft"
+        >
+          <FiPlus size={14} />
+        </button>
+
+      </CanAccess>
+    </div>
   </div>
 </div>
 
 
-      {/* Search */}
-      <div className="mt-6 flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow">
-        <FiSearch />
-        <input
-          placeholder="Search by model or serial..."
-          className="w-full outline-none text-sm"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+{/* SEARCH */}
+<div className="mt-4 sm:mt-6 
+                flex items-center gap-2 
+                bg-white 
+                px-3 sm:px-4 
+                py-2 sm:py-3 
+                rounded-xl shadow">
+
+  <FiSearch className="text-sm sm:text-base text-gray-500" />
+
+  <input
+    placeholder="Search by model or serial..."
+    className="w-full outline-none 
+               text-xs sm:text-sm"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+  />
+</div>
+
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
@@ -361,15 +399,15 @@ export default function FleetPage() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                           AIRCRAFT DETAIL MODAL                              */
+/*                           AIRCRAFT DETAIL MODAL                            */
 /* -------------------------------------------------------------------------- */
 
 function AircraftModal({ aircraft, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
-      <div className="bg-white max-w-[1200px] mx-auto mt-10 mb-10 rounded-2xl shadow-xl p-8">
+      <div className="bg-white mx-auto mb-10 shadow-xl p-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">{aircraft.model}</h2>
+          <h2 className="text-lg sm:text-2xl font-bold">{aircraft.model}</h2>
           <button onClick={onClose}>
             <FiX />
           </button>
@@ -467,7 +505,7 @@ function AddAircraftModal({ onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
-      <div className="bg-white max-w-[1200px] mx-auto mt-10 mb-10 rounded-2xl shadow-xl p-8">
+      <div className="bg-white mx-auto shadow-xl p-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Add New Aircraft</h2>
           <button onClick={onClose}>

@@ -110,7 +110,7 @@ export default function SuperAdminUsers() {
         {/* MOBILE ICON BUTTON */}
         <button
           onClick={() => setEditingUser({})}
-          className="h-10 w-10 sm:w-auto sm:px-4 sm:py-2 rounded-full sm:rounded-lg bg-red-700 text-white flex items-center justify-center gap-2 text-sm hover:bg-[#3C498B]"
+          className="h-10 w-10 sm:w-auto sm:px-4 sm:py-2 rounded-sm sm:rounded-sm bg-[#3C498B] text-white flex items-center justify-center gap-2 text-sm hover:bg-[#3C498B]"
         >
           <FiPlus />
           <span className="hidden sm:inline">Add User</span>

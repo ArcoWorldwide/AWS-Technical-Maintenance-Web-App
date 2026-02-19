@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { BiChart, BiBattery } from "react-icons/bi";
 import {
   LineChart,
@@ -10,18 +11,26 @@ import {
   Pie,
   Cell,
   ResponsiveContainer,
+  BarChart,
+  Bar,
 } from "recharts";
 
-// =================== DATA ===================
-const maintenanceData = [
-  { month: "Jan", requests: 180 },
-  { month: "Feb", requests: 220 },
-  { month: "Mar", requests: 200 },
-  { month: "Apr", requests: 250 },
-  { month: "May", requests: 270 },
-  { month: "Jun", requests: 300 },
-];
 
+// 12 MONTH DATA (JAN - DEC)
+const maintenanceData = [
+  { month: "Jan", requests: 18 },
+  { month: "Feb", requests: 10 },
+  { month: "Mar", requests: 30 },
+  { month: "Apr", requests: 25 },
+  { month: "May", requests: 70 },
+  { month: "Jun", requests: 90 },
+  { month: "Jul", requests: 3 },
+  { month: "Aug", requests: 2 },
+  { month: "Sep", requests: 10 },
+  { month: "Oct", requests: 80 },
+  { month: "Nov", requests: 26 },
+  { month: "Dec", requests: 90 },
+];
 /* ----------- UPDATED PIE DATA (BATTERY STATUS) ----------- */
 
 const batteryStatusData = [
@@ -86,18 +95,47 @@ const Table = ({ columns, data, onRowClick }) => (
   </div>
 );
 
-// =================== LINE CHART COMPONENT ===================
-const LineChartComponent = () => (
-  <ResponsiveContainer width="100%" height={265}>
-    <LineChart data={maintenanceData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-      <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#6E7479" }} />
-      <YAxis tick={{ fontSize: 10, fill: "#6E7479" }} />
-      <Tooltip contentStyle={{ borderRadius: "6px", border: "none" }} />
-      <Line type="monotone" dataKey="requests" stroke="#007BFF" strokeWidth={2.5} dot={{ r: 4 }} />
-    </LineChart>
-  </ResponsiveContainer>
-);
+/* ========================== BAR CHART COMPONENT ========================== */
+
+const BarChartComponent = () => {
+  const [barSize, setBarSize] = useState(10);
+
+  useEffect(() => {
+    // Function to update bar size based on screen width
+    const updateBarSize = () => {
+      if (window.innerWidth < 768) { // Mobile breakpoint (sm/md)
+        setBarSize(7);
+      } else {
+        setBarSize(15);
+      }
+    };
+
+    updateBarSize(); // Set initial size
+    window.addEventListener("resize", updateBarSize);
+
+    return () => window.removeEventListener("resize", updateBarSize);
+  }, []);
+
+  return (
+    <ResponsiveContainer width="100%" height={265}>
+      <BarChart
+        data={maintenanceData}
+        margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="month" tick={{ fontSize: 10, fill: "#6E7479" }} />
+        <YAxis tick={{ fontSize: 10, fill: "#6E7479" }} />
+        <Tooltip contentStyle={{ borderRadius: "6px", border: "none" }} />
+        <Bar
+          dataKey="requests"
+          fill="#007BFF"
+          radius={[4, 4, 0, 0]}
+          barSize={barSize} // <-- Dynamic value
+        />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
 
 // =================== PIE CHART COMPONENT ===================
 const PieChartComponent = () => (
@@ -233,10 +271,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* LINE CHART */}
+          {/* BAR CHART */}
           <div className="bg-white rounded-xl p-4 shadow-md">
-            <h3 className="text-xs text-gray-500 font-semibold mb-1">Maintenance Requests Over Months</h3>
-            <LineChartComponent />
+            <h3 className="text-xs text-gray-500 font-semibold mb-1">
+              Maintenance Requests (Jan - Dec)
+            </h3>
+            <BarChartComponent />
           </div>
 
         </div>

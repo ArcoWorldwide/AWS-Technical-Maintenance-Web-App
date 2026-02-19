@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FiX,
   FiFileText,
@@ -111,7 +111,6 @@ export default function ReportsPage() {
           ))}
         </div>
 
-        {/* VIEW REPORT MODAL */}
         {selectedReport && (
           <ViewReportModal
             report={selectedReport}
@@ -119,7 +118,6 @@ export default function ReportsPage() {
           />
         )}
 
-        {/* UPLOAD MODAL */}
         {showUploadModal && (
           <UploadReportModal
             onClose={() => setShowUploadModal(false)}
@@ -132,34 +130,47 @@ export default function ReportsPage() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                             VIEW REPORT MODAL                                */
+/*                             FULL PAGE MODAL WRAPPER                         */
+/* -------------------------------------------------------------------------- */
+
+function useLockBodyScroll() {
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, []);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             VIEW REPORT MODAL                               */
 /* -------------------------------------------------------------------------- */
 
 function ViewReportModal({ report, onClose }) {
+  useLockBodyScroll();
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4 flex items-center justify-center">
-      <div className="bg-white rounded-2xl max-w-4xl w-full p-4 sm:p-6 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+      <div className="max-w-5xl mx-auto p-6 sm:p-10 relative min-h-screen">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-600 hover:text-gray-900"
+          className="fixed top-6 right-6 text-gray-600 hover:text-gray-900 z-50"
         >
-          <FiX />
+          <FiX size={22} />
         </button>
 
-        <h3 className="text-lg sm:text-2xl font-bold mb-1">
+        <h3 className="text-2xl sm:text-3xl font-bold mb-2">
           {report.title}
         </h3>
-        <p className="text-xs sm:text-sm text-gray-500 mb-4">
-          {report.date}
-        </p>
+        <p className="text-sm text-gray-500 mb-6">{report.date}</p>
 
-        <p className="text-sm sm:text-base text-gray-700 mb-6">
+        <p className="text-base text-gray-700 mb-8 leading-relaxed">
           {report.content}
         </p>
 
-        {/* PDF PREVIEW */}
         {report.pdfUrl ? (
-          <div className="border rounded-xl overflow-hidden h-[400px]">
+          <div className="border rounded-xl overflow-hidden h-[600px]">
             <iframe
               src={report.pdfUrl}
               title="PDF Preview"
@@ -177,16 +188,18 @@ function ViewReportModal({ report, onClose }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                            UPLOAD REPORT MODAL                               */
+/*                            UPLOAD REPORT MODAL                              */
 /* -------------------------------------------------------------------------- */
 
 function UploadReportModal({ onClose, onSubmit }) {
+  useLockBodyScroll();
+
   const [form, setForm] = useState({
     title: "",
     date: "",
     content: "",
   });
-  const [pdfFile, setPdfFile] = useState(null);
+
   const [pdfUrl, setPdfUrl] = useState(null);
   const [error, setError] = useState("");
 
@@ -202,7 +215,6 @@ function UploadReportModal({ onClose, onSubmit }) {
     }
 
     setError("");
-    setPdfFile(file);
     setPdfUrl(URL.createObjectURL(file));
   };
 
@@ -216,25 +228,26 @@ function UploadReportModal({ onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 p-4 flex items-center justify-center">
-      <div className="bg-white rounded-2xl max-w-2xl w-full p-4 sm:p-6 relative">
+    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
+      <div className="max-w-3xl mx-auto p-6 sm:p-10 relative min-h-screen">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-600"
+          className="fixed top-6 right-6 text-gray-600"
         >
-          <FiX />
+          <FiX size={22} />
         </button>
 
-        <h3 className="text-lg sm:text-xl font-bold mb-4">
+        <h3 className="text-lg sm:text-2xl font-bold mb-6">
           Upload Maintenance Report
         </h3>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Input
             label="Report Title"
             value={form.title}
             onChange={(v) => setForm({ ...form, title: v })}
           />
+
           <Input
             label="Date"
             type="date"
@@ -248,7 +261,6 @@ function UploadReportModal({ onClose, onSubmit }) {
             onChange={(v) => setForm({ ...form, content: v })}
           />
 
-          {/* PDF UPLOAD */}
           <div>
             <label className="text-xs text-gray-500">
               Attach PDF Report
@@ -264,19 +276,15 @@ function UploadReportModal({ onClose, onSubmit }) {
             )}
           </div>
 
-          {/* PDF PREVIEW */}
           {pdfUrl && (
-            <div className="border rounded-xl overflow-hidden h-[250px] relative">
+            <div className="border rounded-xl overflow-hidden h-[350px] relative">
               <iframe
                 src={pdfUrl}
                 title="PDF Preview"
                 className="w-full h-full"
               />
               <button
-                onClick={() => {
-                  setPdfFile(null);
-                  setPdfUrl(null);
-                }}
+                onClick={() => setPdfUrl(null)}
                 className="absolute top-2 right-2 bg-white p-1 rounded shadow"
               >
                 <FiTrash2 />
@@ -284,16 +292,14 @@ function UploadReportModal({ onClose, onSubmit }) {
             </div>
           )}
 
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              onClick={onClose}
-              className="text-sm text-gray-600"
-            >
+          <div className="flex justify-end gap-4 pt-8">
+            <button onClick={onClose} className="text-gray-600 text-sm">
               Cancel
             </button>
+
             <button
               onClick={handleSubmit}
-              className="bg-[#3C498B] text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"
+              className="bg-[#3C498B] text-white px-6 py-2 rounded-lg text-sm flex items-center gap-2"
             >
               <FiPlus />
               Upload
@@ -328,7 +334,7 @@ function Textarea({ label, value, onChange }) {
     <div>
       <label className="text-xs text-gray-500">{label}</label>
       <textarea
-        className="w-full border rounded-lg px-3 py-2 text-sm min-h-[120px]"
+        className="w-full border rounded-lg px-3 py-2 text-sm min-h-[150px]"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
