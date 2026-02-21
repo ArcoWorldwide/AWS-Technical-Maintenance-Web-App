@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/landingpage";
 import Login from "./pages/auth/Login";
-//import Signup from "./pages/auth/Signup";
+//import Login from "./pages/auth/Login";
+import CreatePassword from "./pages/auth/CreatePassword";
 
 import SuperAdminLayout from "./layouts/SuperAdminLayout";
 import ProtectedRoute from "./components/reusables/ProtectedRoute";
@@ -20,6 +21,7 @@ const App = () => {
         {/* PUBLIC */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/createpassword" element={<CreatePassword />} />
         {/* <Route path="/signup" element={<Signup />} /> */}
 
         {/* PROTECTED DASHBOARD */}
