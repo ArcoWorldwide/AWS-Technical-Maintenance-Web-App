@@ -5,6 +5,9 @@ import { FiMail, FiLock } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { ROLES } from "../../utils/constants/permissions";
 
+// Grab the API base URL from the .env file
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const Login = () => {
   const navigate = useNavigate();
   const { loginAsRole } = useAuth();
@@ -15,6 +18,9 @@ const Login = () => {
     role: ROLES.ADMIN, // default for now
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -22,12 +28,46 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
-    loginAsRole(formData.role);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    navigate("/dashboard");
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle errors from backend
+        setError(data.message || "Login failed");
+        setLoading(false);
+        return;
+      }
+
+      // Successful login: store token if returned (optional)
+      localStorage.setItem("token", data.token);
+
+      // Set role in context
+      loginAsRole(formData.role);
+
+      // Navigate to dashboard
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,6 +79,10 @@ const Login = () => {
         <p className="text-sm text-gray-500 text-center mt-1">
           Sign in to your account
         </p>
+
+        {error && (
+          <p className="text-red-500 text-sm text-center mt-2">{error}</p>
+        )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           {/* EMAIL */}
@@ -82,9 +126,10 @@ const Login = () => {
           {/* SUBMIT */}
           <button
             type="submit"
-            className="w-full bg-[#3C498B] hover:bg-[#3c498bd9] text-white py-2 rounded-lg text-sm font-medium transition"
+            disabled={loading}
+            className="w-full bg-[#3C498B] hover:bg-[#3c498bd9] text-white py-2 rounded-lg text-sm font-medium transition disabled:opacity-50"
           >
-            Sign In
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
       </div>

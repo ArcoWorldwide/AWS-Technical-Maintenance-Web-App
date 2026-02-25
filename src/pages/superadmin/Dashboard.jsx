@@ -34,7 +34,7 @@ const maintenanceData = [
 /* ----------- UPDATED PIE DATA (BATTERY STATUS) ----------- */
 
 const batteryStatusData = [
-  { name: "Commissioned", value: 45 },
+  { name: "In Store", value: 45 },
   { name: "In Use", value: 35 },
   { name: "Decommissioned", value: 20 },
 ];

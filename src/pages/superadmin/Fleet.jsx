@@ -16,16 +16,24 @@ import CanAccess from "../../components/reusables/CanAccess";
 import { PERMISSIONS } from "../../utils/constants/permissions";
 
 /* -------------------------------------------------------------------------- */
-/*                         SCHEDULED MAINTENANCE REASONS                       */
+/*                    SCHEDULED MAINTENANCE CONFIGURATION                     */
 /* -------------------------------------------------------------------------- */
 
-const DEFAULT_SCHEDULED_REASONS = [
-  "Routine Inspection",
-  "Battery Health Check",
-  "Firmware Upgrade",
-  "Motor & Propeller Check",
-  "IMU & Compass Calibration",
-];
+const MAINTENANCE_CONFIG = {
+  MFE: {
+    engine: [50, 200],
+  },
+  DJI: {
+    engine: [200, 300, 500],
+  },
+  CW25: {
+    engine: [50, 100, 150, 200], // 200 = engine replacement
+    airframe: [100, 200, 300],
+  },
+  SKYWHALE: {
+    airframe: [100, 200, 300],
+  },
+};
 
 /* -------------------------------------------------------------------------- */
 /*                               DEMO FLEET DATA                               */
@@ -58,7 +66,7 @@ const initialFleet = [
     callSign: "CAA, NCAA",
     loaner: false,
     excludedLegal: false,
-    scheduledMaintenance: DEFAULT_SCHEDULED_REASONS,
+    scheduledMaintenance: [],
     history: [
       {
         title: "Routine Inspection",
@@ -94,7 +102,7 @@ const initialFleet = [
     callSign: "EASA",
     loaner: false,
     excludedLegal: false,
-    scheduledMaintenance: DEFAULT_SCHEDULED_REASONS,
+    scheduledMaintenance: [],
     history: [],
   },
   {
@@ -123,7 +131,7 @@ const initialFleet = [
     callSign: "CAA",
     loaner: false,
     excludedLegal: false,
-    scheduledMaintenance: DEFAULT_SCHEDULED_REASONS,
+    scheduledMaintenance: [],
     history: [],
   },
   {
@@ -152,7 +160,7 @@ const initialFleet = [
     callSign: "CAA, NCAA",
     loaner: true,
     excludedLegal: false,
-    scheduledMaintenance: DEFAULT_SCHEDULED_REASONS,
+    scheduledMaintenance: [],
     history: [],
   },
   {
@@ -181,7 +189,7 @@ const initialFleet = [
     callSign: "EASA, CAA",
     loaner: false,
     excludedLegal: false,
-    scheduledMaintenance: DEFAULT_SCHEDULED_REASONS,
+    scheduledMaintenance: [],
     history: [],
   },
 ];
@@ -191,6 +199,61 @@ const initialFleet = [
 /* -------------------------------------------------------------------------- */
 
 const PAGE_SIZE = 6;
+
+/* -------------------------------------------------------------------------- */
+/*                    MAINTENANCE STATUS CALCULATIONS                         */
+/* -------------------------------------------------------------------------- */
+
+function getAircraftCategory(model) {
+  if (model.includes("MFE")) return "MFE";
+  if (model.includes("DJI")) return "DJI";
+  if (model.includes("CW25")) return "CW25";
+  if (model.includes("SKYWHALE")) return "SKYWHALE";
+  return null;
+}
+
+function getNextDueInterval(aircraft) {
+  const category = getAircraftCategory(aircraft.model);
+  if (!category) return null;
+
+  const config = MAINTENANCE_CONFIG[category];
+  if (!config) return null;
+
+  const hours = Number(aircraft.flightHours);
+
+  const allIntervals = [
+    ...(config.engine || []),
+    ...(config.airframe || []),
+  ];
+
+  const next = allIntervals.find((interval) => hours < interval);
+
+  return next || null;
+}
+
+function isApproachingMaintenance(aircraft) {
+  const next = getNextDueInterval(aircraft);
+  if (!next) return false;
+
+  const hours = Number(aircraft.flightHours);
+
+  return next - hours <= 10 && next - hours > 0;
+}
+
+function isOverdueMaintenance(aircraft) {
+  const category = getAircraftCategory(aircraft.model);
+  if (!category) return false;
+
+  const config = MAINTENANCE_CONFIG[category];
+  const hours = Number(aircraft.flightHours);
+
+  const allIntervals = [
+    ...(config.engine || []),
+    ...(config.airframe || []),
+  ];
+
+  return allIntervals.some((interval) => hours >= interval);
+}
 
 export default function FleetPage() {
   const [fleet, setFleet] = useState(initialFleet);
@@ -328,37 +391,47 @@ export default function FleetPage() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
-        {paginatedFleet.map((aircraft) => (
-          <button
-            key={aircraft.id}
-            onClick={() => setSelectedAircraft(aircraft)}
-            className="bg-white rounded-2xl shadow p-5 text-left hover:shadow-md transition"
-          >
-            <h3 className="font-semibold text-gray-800 mb-1">
-              {aircraft.model}
-            </h3>
-            <p className="text-xs text-gray-500 mb-2">
-              {aircraft.manufacturer}
-            </p>
+{paginatedFleet.map((aircraft) => (
+  <button
+    key={aircraft.id}
+    onClick={() => setSelectedAircraft(aircraft)}
+    className="relative bg-white rounded-2xl shadow p-5 text-left hover:shadow-md transition"
+  >
 
-            <p
-              className={`text-xs font-medium ${
-                aircraft.status === "In Service"
-                  ? "text-green-600"
-                  : aircraft.status === "Under Maintenance"
-                  ? "text-yellow-600"
-                  : "text-red-600"
-              }`}
-            >
-              {aircraft.status}
-            </p>
+    {(isApproachingMaintenance(aircraft) ||
+      isOverdueMaintenance(aircraft)) && (
+      <span className="absolute top-3 right-3 text-red-600 text-lg">
+        ●
+      </span>
+    )}
 
-            <div className="mt-3 text-xs text-gray-600 space-y-1">
-              <div>Location: {aircraft.location}</div>
-              <div>Flight Hours: {aircraft.flightHours}</div>
-            </div>
-          </button>
-        ))}
+    <h3 className="font-semibold text-gray-800 mb-1">
+      {aircraft.model}
+    </h3>
+
+    <p className="text-xs text-gray-500 mb-2">
+      {aircraft.manufacturer}
+    </p>
+
+    <p
+      className={`text-xs font-medium ${
+        aircraft.status === "In Service"
+          ? "text-green-600"
+          : aircraft.status === "Under Maintenance"
+          ? "text-yellow-600"
+          : "text-red-600"
+      }`}
+    >
+      {aircraft.status}
+    </p>
+
+    <div className="mt-3 text-xs text-gray-600 space-y-1">
+      <div>Location: {aircraft.location}</div>
+      <div>Flight Hours: {aircraft.flightHours}</div>
+    </div>
+
+  </button>
+))}
       </div>
 
       {/* Pagination */}
@@ -379,12 +452,23 @@ export default function FleetPage() {
         </div>
       )}
 
-      {selectedAircraft && (
-        <AircraftModal
-          aircraft={selectedAircraft}
-          onClose={() => setSelectedAircraft(null)}
-        />
-      )}
+{selectedAircraft && (
+  <AircraftModal
+    aircraft={selectedAircraft}
+    onClose={() => setSelectedAircraft(null)}
+    onUpdateHours={(id, hours) => {
+      setFleet((prev) =>
+        prev.map((a) =>
+          a.id === id ? { ...a, flightHours: hours } : a
+        )
+      );
+
+      setSelectedAircraft((prev) =>
+        prev ? { ...prev, flightHours: hours } : prev
+      );
+    }}
+  />
+)}
 
       {showAddModal && (
         <AddAircraftModal
@@ -399,14 +483,13 @@ export default function FleetPage() {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                           AIRCRAFT DETAIL MODAL                            */
+/*                           AIRCRAFT DETAIL MODAL                              */
 /* -------------------------------------------------------------------------- */
 
-function AircraftModal({ aircraft, onClose }) {
-  return (
+function AircraftModal({ aircraft, onClose, onUpdateHours }) {  return (
     <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
       <div className="bg-white mx-auto mb-10 shadow-xl p-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mt-10 mb-6">
           <h2 className="text-lg sm:text-2xl font-bold">{aircraft.model}</h2>
           <button onClick={onClose}>
             <FiX />
@@ -428,15 +511,95 @@ function AircraftModal({ aircraft, onClose }) {
           })}
         </div>
 
+<CanAccess permission={PERMISSIONS.EDIT_FLEET}>
+  <div className="mt-6 flex justify-end">
+    <button
+      onClick={() => {
+        const newHours = prompt("Enter new flight hours:");
+        if (!newHours) return;
+        onUpdateHours(aircraft.id, newHours);
+      }}
+      className="bg-[#3C498B] text-white px-4 py-2 rounded-xl text-sm"
+    >
+      Update Flight Hours
+    </button>
+  </div>
+</CanAccess>
+
+<div className="mt-4 flex justify-end">
+  <button
+    onClick={() => {
+      const maintenancePayload = {
+        aircraftId: aircraft.id,
+        model: aircraft.model,
+        serial: aircraft.serial,
+        manufacturer: aircraft.manufacturer,
+        type: aircraft.type,
+        location: aircraft.location,
+        flightHours: aircraft.flightHours,
+        status: aircraft.status,
+      };
+
+      // Save data so Maintenance page can auto-fill
+      localStorage.setItem(
+        "prefilledMaintenance",
+        JSON.stringify(maintenancePayload)
+      );
+
+      // Redirect
+      window.location.href = "/maintenance";
+    }}
+    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm transition"
+  >
+    Request Maintenance
+  </button>
+</div> 
+
         {/* Scheduled Maintenance */}
         <h3 className="mt-8 font-semibold">
           Scheduled Maintenance Reasons
         </h3>
-        <select className="mt-3 border rounded-xl px-3 py-2 text-sm">
-          {aircraft.scheduledMaintenance.map((reason, i) => (
-            <option key={i}>{reason}</option>
-          ))}
-        </select>
+<select
+  className="mt-3 border rounded-xl px-3 py-2 text-sm"
+  onChange={(e) => {
+    const selectedReason = e.target.value;
+
+    const maintenancePayload = {
+      aircraftId: aircraft.id,
+      model: aircraft.model,
+      serial: aircraft.serial,
+      reason: selectedReason,
+      flightHours: aircraft.flightHours,
+    };
+
+    localStorage.setItem(
+      "prefilledMaintenance",
+      JSON.stringify(maintenancePayload)
+    );
+
+    window.location.href = "/maintenance";
+  }}
+>
+  <option>Select Maintenance Reason</option>
+
+  {(() => {
+    const category = getAircraftCategory(aircraft.model);
+    if (!category) return null;
+
+    const config = MAINTENANCE_CONFIG[category];
+
+    const reasons = [
+      ...(config.engine || []).map((h) => `Engine - ${h} Hours`),
+      ...(config.airframe || []).map((h) => `Airframe - ${h} Hours`),
+    ];
+
+    return reasons.map((reason, i) => (
+      <option key={i} value={reason}>
+        {reason}
+      </option>
+    ));
+  })()}
+</select>
 
         {/* Maintenance History */}
         <h3 className="mt-8 font-semibold">Maintenance History</h3>
@@ -496,7 +659,7 @@ function AddAircraftModal({ onClose, onSave }) {
     onSave({
       ...form,
       id: Date.now(),
-      scheduledMaintenance: DEFAULT_SCHEDULED_REASONS,
+      scheduledMaintenance: [],
       history: [],
     });
 
@@ -506,7 +669,7 @@ function AddAircraftModal({ onClose, onSave }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
       <div className="bg-white mx-auto shadow-xl p-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between mt-10 items-center mb-6">
           <h2 className="text-2xl font-bold">Add New Aircraft</h2>
           <button onClick={onClose}>
             <FiX />
@@ -534,19 +697,6 @@ function AddAircraftModal({ onClose, onSave }) {
               />
             );
           })}
-
-          <Checkbox
-            label="Loaner Drone"
-            name="loaner"
-            checked={form.loaner}
-            onChange={handleChange}
-          />
-          <Checkbox
-            label="Excluded From Legal Report"
-            name="excludedLegal"
-            checked={form.excludedLegal}
-            onChange={handleChange}
-          />
 
           <div className="md:col-span-3 flex justify-end gap-3 mt-4">
             <button type="button" onClick={onClose}>

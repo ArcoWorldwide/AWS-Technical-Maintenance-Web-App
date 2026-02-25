@@ -1,7 +1,18 @@
 import { useState, useEffect } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
+
+// Use .env for API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CreatePassword = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Read UID from URL query param: /create-password?uid=6994eabc2b3141fee34b5e34
+  const searchParams = new URLSearchParams(location.search);
+  const uid = searchParams.get("uid");
+
   const [email, setEmail] = useState(""); // Comes from server
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -11,17 +22,36 @@ const CreatePassword = () => {
   const [loading, setLoading] = useState(false);
   const [fetchingEmail, setFetchingEmail] = useState(true);
 
-  // Simulate fetching email from server (e.g. token-based link)
+  // Fetch email from backend using UID
   useEffect(() => {
-    setTimeout(() => {
-      // This would normally come from backend API
-      const serverEmail = "user@arcoworldwide.ng";
-      setEmail(serverEmail);
+    if (!uid) {
+      setError("Invalid password setup link.");
       setFetchingEmail(false);
-    }, 1000);
-  }, []);
+      return;
+    }
 
-  const handleSubmit = (e) => {
+    const fetchEmail = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/get-email/${uid}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.message || "Failed to fetch email.");
+        } else {
+          setEmail(data.email);
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Something went wrong fetching your email.");
+      } finally {
+        setFetchingEmail(false);
+      }
+    };
+
+    fetchEmail();
+  }, [uid]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -42,13 +72,45 @@ const CreatePassword = () => {
 
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Create password
+      const response = await fetch(`${API_BASE_URL}/auth/create-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Failed to create password.");
+        setLoading(false);
+        return;
+      }
+
+      // Auto-login after password creation
+      const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const loginData = await loginResponse.json();
+
+      if (!loginResponse.ok) {
+        setError(loginData.message || "Password created, but auto-login failed.");
+      } else {
+        // Store token in localStorage
+        localStorage.setItem("token", loginData.token);
+        alert("Password created and logged in successfully!");
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-      alert("Password created successfully!");
-      // redirect to dashboard here
-      // navigate("/dashboard");
-    }, 1500);
+    }
   };
 
   if (fetchingEmail) {
@@ -73,14 +135,13 @@ const CreatePassword = () => {
             Create Your Password
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Your account has been created by the admin.
-            Please set your password to activate it.
+            Your account has been created by the admin. Please set your password
+            to activate it.
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* Email (Read Only) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -93,10 +154,7 @@ const CreatePassword = () => {
                 readOnly
                 className="w-full px-4 py-3 border bg-gray-50 rounded-lg text-sm cursor-not-allowed"
               />
-              <Mail
-                size={18}
-                className="absolute right-3 top-3 text-gray-400"
-              />
+              <Mail size={18} className="absolute right-3 top-3 text-gray-400" />
             </div>
           </div>
 
@@ -138,16 +196,10 @@ const CreatePassword = () => {
               />
               <button
                 type="button"
-                onClick={() =>
-                  setShowConfirmPassword(!showConfirmPassword)
-                }
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-3 text-gray-500"
               >
-                {showConfirmPassword ? (
-                  <EyeOff size={18} />
-                ) : (
-                  <Eye size={18} />
-                )}
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
