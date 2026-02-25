@@ -5,7 +5,6 @@ import {
   FiCheck,
   FiSlash,
   FiSearch,
-  FiPlay,
   FiDownload,
   FiUpload,
 } from "react-icons/fi";
@@ -263,7 +262,7 @@ useEffect(() => {
         <CanAccess permission={PERMISSIONS.REQUEST_MAINTENANCE}>
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-[#3C498B] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-xl text-xs md:text-sm"
+            className="flex items-center gap-2 bg-[#3C498B] text-white px-3 md:px-4 py-1.5 md:py-2 rounded-md text-xs md:text-sm"
           >
             <FiPlus />
             Request Maintenance
@@ -294,6 +293,7 @@ useEffect(() => {
         <table className="min-w-full text-xs md:text-sm">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
+              <th className="px-2 md:px-4 py-2 md:py-3 text-left">#</th>
               <th className="px-2 md:px-4 py-2 md:py-3 text-left">Aircraft</th>
               <th className="px-2 md:px-4 py-2 md:py-3 text-left">Location</th>
               <th className="px-2 md:px-4 py-2 md:py-3 text-left">Hours</th>
@@ -307,25 +307,26 @@ useEffect(() => {
               )}
             </tr>
           </thead>
-          <tbody>
-            {paginated.map((item) => (
-              <tr
-                key={item.id}
-                className="border-t hover:bg-gray-50 cursor-pointer"
-                onClick={() => setSelected(item)}
-              >
-               <td className="px-2 md:px-4 py-2 md:py-3 font-medium whitespace-nowrap">
-  {item.aircraftModel}
-  <div className="text-[9px] md:text-xs text-blue-700 whitespace-nowrap">
-    {item.serialNumber}
-  </div>
-</td>
-<td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{item.location}</td>
-<td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{item.flightHours}</td>
-<td className="px-2 md:px-4 py-2 md:py-3 capitalize whitespace-nowrap">{item.maintenanceType}</td>
-<td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{item.reason.slice(0, 30)}...</td>
-<td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{workBadge(item.workStatus)}</td>
-<td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{approvalBadge(item.approval)}</td>
+<tbody>
+  {paginated.map((item, index) => (
+    <tr
+      key={item.id}
+      className="border-t hover:bg-gray-50 cursor-pointer"
+      onClick={() => setSelected(item)}
+    >
+      <td className="px-2 md:px-4 py-2 md:py-3 font-medium">{index + 1}</td> {/* Serial Number */}
+      <td className="px-2 md:px-4 py-2 md:py-3 font-medium whitespace-nowrap">
+        {item.aircraftModel}
+        <div className="text-[9px] md:text-xs text-blue-700 whitespace-nowrap">
+          {item.serialNumber}
+        </div>
+      </td>
+      <td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{item.location}</td>
+      <td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{item.flightHours}</td>
+      <td className="px-2 md:px-4 py-2 md:py-3 capitalize whitespace-nowrap">{item.maintenanceType}</td>
+      <td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{item.reason.slice(0, 30)}...</td>
+      <td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{workBadge(item.workStatus)}</td>
+      <td className="px-2 md:px-4 py-2 md:py-3 whitespace-nowrap">{approvalBadge(item.approval)}</td>
                 {CURRENT_ROLE === "ADMIN" && (
                   <td className="px-2 md:px-4 py-2 md:py-3" onClick={(e) => e.stopPropagation()}>
                     {item.approval === "pending" && (
@@ -344,16 +345,20 @@ useEffect(() => {
                   <td className="px-2 md:px-4 py-2 md:py-3" onClick={(e) => e.stopPropagation()}>
                     {item.approval === "approved" && item.workStatus !== "done" && (
                       <div className="flex gap-1 md:gap-2">
-                        {item.workStatus === "pending" && (
-                          <button onClick={() => handleStartWork(item.id)} className="text-blue-600 text-[10px]">
-                            progress
-                           {/* <FiPlay /> */}
-                          </button>
-                        )}
-                        <CompletionButton
-                          item={item}
-                          onComplete={(report) => handleMarkDone(item.id, report)}
-                        />
+{item.workStatus === "pending" && (
+  <button
+    onClick={() => handleStartWork(item.id)}
+className="text-blue-600 text-[10px] font-semibold hover:text-blue-800"  >
+    Ongoing
+  </button>
+)}
+
+{item.workStatus === "in_progress" && (
+  <CompletionButton
+    item={item}
+    onComplete={(report) => handleMarkDone(item.id, report)}
+  />
+)}
                       </div>
                     )}
                   </td>
@@ -425,7 +430,7 @@ function CompletionButton({ item, onComplete }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="text-green-600 text-[10px]">
+      <button onClick={() => setOpen(true)} className="text-green-600 text-[10px] font-semibold hover:text-green-800">
         Done
       </button>
 
@@ -643,11 +648,11 @@ function RequestModal({ onClose, onSubmit, prefillData }) {
           {/* Serial Number */}
           <div>
             <label className="text-xs md:text-sm text-gray-500">Serial Number</label>
-            <input
-              className="w-full border rounded px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
-              value={form.serialNumber}
-              readOnly
-            />
+<input
+  className="w-full border rounded px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
+  value={form.serialNumber}
+  onChange={(e) => setForm({ ...form, serialNumber: e.target.value })}
+/>
           </div>
 
           <div>

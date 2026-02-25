@@ -14,24 +14,104 @@ import {
 /* ROLE-BASED ACCESS */
 import CanAccess from "../../components/reusables/CanAccess";
 import { PERMISSIONS } from "../../utils/constants/permissions";
-
-/* -------------------------------------------------------------------------- */
-/*                    SCHEDULED MAINTENANCE CONFIGURATION                     */
-/* -------------------------------------------------------------------------- */
+import { useNavigate } from "react-router-dom";
 
 const MAINTENANCE_CONFIG = {
-  MFE: {
-    engine: [50, 200],
+
+  /* ----------------------------------------------------- */
+  /*                    GENERAL (Fallback)                 */
+  /* ----------------------------------------------------- */
+
+  GENERAL: {
+    scheduled: [
+      { code: "GEN-25", label: "25 Hour General Inspection", interval: 25 },
+      { code: "GEN-50", label: "50 Hour General Inspection", interval: 50 },
+      { code: "GEN-100", label: "100 Hour General Service", interval: 100 },
+      { code: "GEN-200", label: "200 Hour Major Inspection", interval: 200 },
+      { code: "GEN-300", label: "300 Hour Structural Check", interval: 300 },
+      { code: "GEN-400", label: "400 Hour Deep System Overhaul", interval: 400 },
+      { code: "ANNUAL", label: "Annual Airworthiness Review", interval: null },
+      { code: "COMP", label: "Regulatory Compliance Check", interval: null },
+      { code: "CAL", label: "Full System Calibration", interval: null },
+      { code: "FW", label: "Firmware Audit & Update", interval: null },
+      { code: "PAYLOAD", label: "Payload Mount Inspection", interval: null },
+      { code: "FRAME", label: "Airframe Structural Inspection", interval: null },
+      { code: "ELEC", label: "Electrical Wiring Check", interval: null },
+      { code: "ESC", label: "ESC Recalibration", interval: null },
+      { code: "MOTOR", label: "Motor Performance Test", interval: null },
+    ],
   },
+
+  /* ----------------------------------------------------- */
+  /*                        DJI                            */
+  /* ----------------------------------------------------- */
+
   DJI: {
-    engine: [200, 300, 500],
+    scheduled: [
+      { code: "DJI-25", label: "25 Hour DJI System Check", interval: 25 },
+      { code: "DJI-50", label: "50 Hour DJI Inspection", interval: 50 },
+      { code: "DJI-100", label: "100 Hour DJI Maintenance", interval: 100 },
+      { code: "DJI-200", label: "200 Hour DJI Major Service", interval: 200 },
+      { code: "DJI-300", label: "300 Hour Motor Replacement", interval: 300 },
+      { code: "DJI-400", label: "400 Hour ESC Replacement", interval: 400 },
+      { code: "BAT-100", label: "Battery Health Check - 100 Hours", interval: 100 },
+      { code: "BAT-200", label: "Battery Replacement - 200 Hours", interval: 200 },
+      { code: "IMU-150", label: "IMU Recalibration - 150 Hours", interval: 150 },
+      { code: "GPS-150", label: "GPS System Validation - 150 Hours", interval: 150 },
+      { code: "CAM-100", label: "Gimbal & Camera Alignment - 100 Hours", interval: 100 },
+      { code: "RTK-200", label: "RTK Module Accuracy Test - 200 Hours", interval: 200 },
+      { code: "ANNUAL", label: "Annual DJI Compliance Review", interval: null },
+    ],
   },
-  CW25: {
-    engine: [50, 100, 150, 200], // 200 = engine replacement
-    airframe: [100, 200, 300],
+
+  /* ----------------------------------------------------- */
+  /*                     FIXED WING                        */
+  /* ----------------------------------------------------- */
+
+  "FIXED WING": {
+    scheduled: [
+      { code: "FW-50", label: "50 Hour Fixed Wing Inspection", interval: 50 },
+      { code: "FW-100", label: "100 Hour Wing Load Test", interval: 100 },
+      { code: "FW-200", label: "200 Hour Structural Reinforcement", interval: 200 },
+      { code: "FW-300", label: "300 Hour Control Surface Service", interval: 300 },
+      { code: "FW-400", label: "400 Hour Major Overhaul", interval: 400 },
+      { code: "WING-150", label: "Wing Integrity Scan - 150 Hours", interval: 150 },
+      { code: "TAIL-200", label: "Tail Section Inspection - 200 Hours", interval: 200 },
+      { code: "FUEL-100", label: "Fuel System Maintenance - 100 Hours", interval: 100 },
+      { code: "NAV-100", label: "Navigation System Check - 100 Hours", interval: 100 },
+      { code: "PAYLOAD-150", label: "Payload Mount Check - 150 Hours", interval: 150 },
+    ],
   },
-  SKYWHALE: {
-    airframe: [100, 200, 300],
+
+  /* ----------------------------------------------------- */
+  /*                     VTOL DRONES                       */
+  /* ----------------------------------------------------- */
+
+  VTOL: {
+    scheduled: [
+      { code: "VTOL-50", label: "50 Hour VTOL Hybrid Check", interval: 50 },
+      { code: "VTOL-100", label: "100 Hour VTOL Transition Test", interval: 100 },
+      { code: "VTOL-200", label: "200 Hour VTOL Major Service", interval: 200 },
+      { code: "TRANS-150", label: "Transition Mechanism Inspection - 150 Hours", interval: 150 },
+      { code: "HYB-200", label: "Hybrid Motor System Service - 200 Hours", interval: 200 },
+      { code: "PROP-100", label: "Lift Propeller Replacement - 100 Hours", interval: 100 },
+      { code: "CTRL-150", label: "Flight Control System Test - 150 Hours", interval: 150 },
+    ],
+  },
+
+  /* ----------------------------------------------------- */
+  /*                     AGRICULTURE DRONES                */
+  /* ----------------------------------------------------- */
+
+  AGRICULTURE: {
+    scheduled: [
+      { code: "AG-25", label: "25 Hour Spray System Flush", interval: 25 },
+      { code: "AG-50", label: "50 Hour Pump Inspection", interval: 50 },
+      { code: "AG-100", label: "100 Hour Nozzle Replacement", interval: 100 },
+      { code: "AG-150", label: "150 Hour Tank Pressure Test", interval: 150 },
+      { code: "AG-200", label: "200 Hour Sprayer Overhaul", interval: 200 },
+      { code: "AG-300", label: "300 Hour Structural Check", interval: 300 },
+    ],
   },
 };
 
@@ -60,12 +140,10 @@ const initialFleet = [
     insurableValue: "12000000",
     purchaseDate: "2024-01-18",
     location: "Lagos Base",
-    flightHours: "412",
+    flightHours: "12",
     batteryCycles: "138",
     firmware: "v04.01.02",
     callSign: "CAA, NCAA",
-    loaner: false,
-    excludedLegal: false,
     scheduledMaintenance: [],
     history: [
       {
@@ -100,8 +178,6 @@ const initialFleet = [
     batteryCycles: "402",
     firmware: "v3.9.7",
     callSign: "EASA",
-    loaner: false,
-    excludedLegal: false,
     scheduledMaintenance: [],
     history: [],
   },
@@ -125,12 +201,10 @@ const initialFleet = [
     insurableValue: "4200000",
     purchaseDate: "2024-03-12",
     location: "Port Harcourt",
-    flightHours: "188",
+    flightHours: "10",
     batteryCycles: "76",
     firmware: "v2.6.1",
     callSign: "CAA",
-    loaner: false,
-    excludedLegal: false,
     scheduledMaintenance: [],
     history: [],
   },
@@ -158,8 +232,6 @@ const initialFleet = [
     batteryCycles: "611",
     firmware: "v01.02.000",
     callSign: "CAA, NCAA",
-    loaner: true,
-    excludedLegal: false,
     scheduledMaintenance: [],
     history: [],
   },
@@ -183,12 +255,10 @@ const initialFleet = [
     insurableValue: "9700000",
     purchaseDate: "2024-05-29",
     location: "Survey Ops Unit",
-    flightHours: "311",
+    flightHours: "31",
     batteryCycles: "102",
     firmware: "v1.8.4",
     callSign: "EASA, CAA",
-    loaner: false,
-    excludedLegal: false,
     scheduledMaintenance: [],
     history: [],
   },
@@ -204,31 +274,20 @@ const PAGE_SIZE = 6;
 /*                    MAINTENANCE STATUS CALCULATIONS                         */
 /* -------------------------------------------------------------------------- */
 
-function getAircraftCategory(model) {
-  if (model.includes("MFE")) return "MFE";
-  if (model.includes("DJI")) return "DJI";
-  if (model.includes("CW25")) return "CW25";
-  if (model.includes("SKYWHALE")) return "SKYWHALE";
-  return null;
-}
-
 function getNextDueInterval(aircraft) {
-  const category = getAircraftCategory(aircraft.model);
-  if (!category) return null;
-
-  const config = MAINTENANCE_CONFIG[category];
-  if (!config) return null;
+  const category =
+    MAINTENANCE_CONFIG[aircraft.manufacturer?.toUpperCase()] ||
+    MAINTENANCE_CONFIG[aircraft.type?.toUpperCase()] ||
+    MAINTENANCE_CONFIG.GENERAL;
 
   const hours = Number(aircraft.flightHours);
 
-  const allIntervals = [
-    ...(config.engine || []),
-    ...(config.airframe || []),
-  ];
+  const intervals = category.scheduled
+    .filter((item) => item.interval)
+    .map((item) => item.interval)
+    .sort((a, b) => a - b);
 
-  const next = allIntervals.find((interval) => hours < interval);
-
-  return next || null;
+  return intervals.find((interval) => hours < interval) || null;
 }
 
 function isApproachingMaintenance(aircraft) {
@@ -241,18 +300,23 @@ function isApproachingMaintenance(aircraft) {
 }
 
 function isOverdueMaintenance(aircraft) {
-  const category = getAircraftCategory(aircraft.model);
-  if (!category) return false;
+  const config =
+    MAINTENANCE_CONFIG[aircraft.manufacturer?.toUpperCase()] ||
+    MAINTENANCE_CONFIG[aircraft.type?.toUpperCase()] ||
+    MAINTENANCE_CONFIG.GENERAL;
 
-  const config = MAINTENANCE_CONFIG[category];
+  if (!config || !config.scheduled) return false;
+
   const hours = Number(aircraft.flightHours);
 
-  const allIntervals = [
-    ...(config.engine || []),
-    ...(config.airframe || []),
-  ];
-
-  return allIntervals.some((interval) => hours >= interval);
+  return config.scheduled.some(
+    (item) =>
+      item.interval &&
+      hours >= item.interval &&
+      !aircraft.history.some((h) =>
+        h.title?.includes(item.interval + " Hour")
+      )
+  );
 }
 
 export default function FleetPage() {
@@ -486,7 +550,9 @@ export default function FleetPage() {
 /*                           AIRCRAFT DETAIL MODAL                              */
 /* -------------------------------------------------------------------------- */
 
-function AircraftModal({ aircraft, onClose, onUpdateHours }) {  return (
+function AircraftModal({ aircraft, onClose, onUpdateHours }) {  
+   const navigate = useNavigate(); 
+  return (
     <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
       <div className="bg-white mx-auto mb-10 shadow-xl p-8">
         <div className="flex justify-between items-center mt-10 mb-6">
@@ -547,7 +613,7 @@ function AircraftModal({ aircraft, onClose, onUpdateHours }) {  return (
       );
 
       // Redirect
-      window.location.href = "/maintenance";
+      navigate("/dashboard/maintenance");
     }}
     className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm transition"
   >
@@ -560,9 +626,11 @@ function AircraftModal({ aircraft, onClose, onUpdateHours }) {  return (
           Scheduled Maintenance Reasons
         </h3>
 <select
-  className="mt-3 border rounded-xl px-3 py-2 text-sm"
+  className="mt-3 border rounded-xl px-3 py-2 text-sm w-full"
+  defaultValue=""
   onChange={(e) => {
     const selectedReason = e.target.value;
+    if (!selectedReason) return;
 
     const maintenancePayload = {
       aircraftId: aircraft.id,
@@ -577,28 +645,20 @@ function AircraftModal({ aircraft, onClose, onUpdateHours }) {  return (
       JSON.stringify(maintenancePayload)
     );
 
-    window.location.href = "/maintenance";
+    navigate("/dashboard/maintenance");
   }}
 >
-  <option>Select Maintenance Reason</option>
+  <option value="">Select Maintenance Reason</option>
 
-  {(() => {
-    const category = getAircraftCategory(aircraft.model);
-    if (!category) return null;
-
-    const config = MAINTENANCE_CONFIG[category];
-
-    const reasons = [
-      ...(config.engine || []).map((h) => `Engine - ${h} Hours`),
-      ...(config.airframe || []).map((h) => `Airframe - ${h} Hours`),
-    ];
-
-    return reasons.map((reason, i) => (
-      <option key={i} value={reason}>
-        {reason}
-      </option>
-    ));
-  })()}
+  {(
+    MAINTENANCE_CONFIG[aircraft.manufacturer?.toUpperCase()] ||
+    MAINTENANCE_CONFIG[aircraft.type?.toUpperCase()] ||
+    MAINTENANCE_CONFIG.GENERAL
+  ).scheduled.map((item) => (
+    <option key={item.code} value={item.label}>
+      {item.label}
+    </option>
+  ))}
 </select>
 
         {/* Maintenance History */}
@@ -641,8 +701,6 @@ function AddAircraftModal({ onClose, onSave }) {
     batteryCycles: "",
     firmware: "",
     callSign: "",
-    loaner: false,
-    excludedLegal: false,
   });
 
   const handleChange = (e) => {
@@ -680,23 +738,15 @@ function AddAircraftModal({ onClose, onSave }) {
           onSubmit={handleSubmit}
           className="grid md:grid-cols-3 gap-4 text-sm"
         >
-          {Object.keys(form).map((field) => {
-            if (
-              field === "loaner" ||
-              field === "excludedLegal"
-            )
-              return null;
-
-            return (
-              <Input
-                key={field}
-                label={field}
-                name={field}
-                value={form[field]}
-                onChange={handleChange}
-              />
-            );
-          })}
+{Object.keys(form).map((field) => (
+  <Input
+    key={field}
+    label={field}
+    name={field}
+    value={form[field]}
+    onChange={handleChange}
+  />
+))}
 
           <div className="md:col-span-3 flex justify-end gap-3 mt-4">
             <button type="button" onClick={onClose}>

@@ -1,7 +1,6 @@
 // ============================================================================
 // FULL BATTERY PAGE — ENTERPRISE VERSION
 // ROLE BASED + VALIDATION + AUDIT TRAIL + AUTO HEALTH + CRITICAL BADGES
-// FULL WORKING VERSION (700+ LINES)
 // ============================================================================
 
 import { useEffect, useMemo, useState } from "react";
@@ -11,9 +10,7 @@ import {
   FiX,
   FiAlertTriangle,
   FiUser,
-  FiBatteryCharging,
-  FiArchive,
-  FiActivity,
+
 } from "react-icons/fi";
 
 import CanAccess from "../../components/reusables/CanAccess";
@@ -410,7 +407,7 @@ export default function BatteryPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-full text-xs ${
+              className={`px-4 py-2 rounded-md text-xs ${
                 tab === t
                   ? "bg-[#3C498B] text-white"
                   : "bg-white shadow"

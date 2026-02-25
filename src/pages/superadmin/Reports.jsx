@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   FiX,
   FiFileText,
@@ -51,10 +51,22 @@ export default function ReportsPage() {
   const [reports, setReports] = useState(initialReportsData);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleAddReport = (newReport) => {
     setReports((prev) => [newReport, ...prev]);
   };
+
+  // Filter reports based on search
+  const filteredReports = useMemo(() => {
+    if (!searchTerm) return reports;
+    const term = searchTerm.toLowerCase();
+    return reports.filter(
+      (r) =>
+        r.title.toLowerCase().includes(term) ||
+        r.content.toLowerCase().includes(term)
+    );
+  }, [reports, searchTerm]);
 
   return (
     <div className="flex min-h-screen">
@@ -82,9 +94,20 @@ export default function ReportsPage() {
           </CanAccess>
         </div>
 
+        {/* SEARCH BAR */}
+        <div className="max-w-4xl mx-auto mb-4">
+          <input
+            type="text"
+            placeholder="Search reports..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border rounded-xl px-4 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#3C498B]"
+          />
+        </div>
+
         {/* REPORT LIST */}
         <div className="space-y-4 max-w-4xl mx-auto">
-          {reports.map((report) => (
+          {filteredReports.map((report) => (
             <div
               key={report.id}
               onClick={() => setSelectedReport(report)}
@@ -109,6 +132,12 @@ export default function ReportsPage() {
               </div>
             </div>
           ))}
+
+          {filteredReports.length === 0 && (
+            <p className="text-center text-gray-400 mt-6">
+              No reports match your search.
+            </p>
+          )}
         </div>
 
         {selectedReport && (
