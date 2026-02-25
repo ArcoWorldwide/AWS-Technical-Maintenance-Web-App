@@ -233,22 +233,47 @@ export default function Dashboard() {
         <div className="xl:col-span-2 flex flex-col gap-6">
 
           {/* SUMMARY CARD */}
-          <div className="bg-white rounded-xl mt-3 p-4 flex justify-between items-center gap-4 shadow-md">
-            <div className="space-y-1 w-full">
-              <h3 className="text-xs text-gray-500">Total Maintenance Requests</h3>
-              <h2 className="text-2xl font-semibold text-gray-700">1,500</h2>
-              <div className="flex flex-wrap gap-1">
-                <span className="px-2 py-0.5 text-xs rounded-full bg-yellow-100 text-yellow-600">Pending: 320</span>
-                <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-600">In Progress: 410</span>
-                <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-600">Completed: 230</span>
-                <span className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600">Rejected: 75</span>
-              </div>
-            </div>
+<div className="bg-white rounded-2xl mt-3 p-4 sm:p-5 shadow-md">
+  <div className="flex flex-col gap-4">
+    
+    {/* Header Section */}
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="text-xs sm:text-sm text-gray-500">
+          Total Maintenance Requests
+        </h3>
+        <h2 className="text-3xl sm:text-2xl font-bold text-gray-800 mt-1">
+          1,500
+        </h2>
+      </div>
+    </div>
+
+    {/* Status Grid */}
+    <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+      <span className="text-center px-3 py-1.5 text-xs sm:text-xs rounded-full bg-yellow-100 text-yellow-700 font-medium">
+        Pending: 320
+      </span>
+
+      <span className="text-center px-3 py-1.5 text-xs sm:text-xs rounded-full bg-blue-100 text-blue-700 font-medium">
+        In Progress: 410
+      </span>
+
+      <span className="text-center px-3 py-1.5 text-xs sm:text-xs rounded-full bg-green-100 text-green-700 font-medium">
+        Completed: 230
+      </span>
+
+      <span className="text-center px-3 py-1.5 text-xs sm:text-xs rounded-full bg-red-100 text-red-700 font-medium">
+        Rejected: 75
+      </span>
+    </div>
+
+  </div>
+</div>
+            {/*}
             <div className="bg-blue-50 rounded-lg p-3 flex items-center justify-center">
               <BiBattery className="text-blue-500 w-8 h-8" />
             </div>
-          </div>
-
+            */}
           {/* METRIC CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white rounded-xl p-4 flex flex-col justify-between shadow-md">
