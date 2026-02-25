@@ -242,7 +242,7 @@ export default function Dashboard() {
         <h3 className="text-xs sm:text-sm text-gray-500">
           Total Maintenance Requests
         </h3>
-        <h2 className="text-3xl sm:text-2xl font-bold text-gray-800 mt-1">
+        <h2 className="text-xl font-bold text-gray-800 mt-1">
           1,500
         </h2>
       </div>
