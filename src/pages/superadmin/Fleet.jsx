@@ -551,10 +551,19 @@ export default function FleetPage() {
 /* -------------------------------------------------------------------------- */
 
 function AircraftModal({ aircraft, onClose, onUpdateHours }) {  
+
+  useEffect(() => {
+  const originalStyle = window.getComputedStyle(document.body).overflow;
+  document.body.style.overflow = "hidden";
+
+  return () => {
+    document.body.style.overflow = originalStyle;
+  };
+}, []);
    const navigate = useNavigate(); 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
-      <div className="bg-white mx-auto mb-10 shadow-xl p-8">
+<div className="fixed inset-0 bg-black/40 z-50 flex">
+  <div className="bg-white w-full h-full overflow-y-auto p-8">
         <div className="flex justify-between items-center mt-10 mb-6">
           <h2 className="text-lg sm:text-2xl font-bold">{aircraft.model}</h2>
           <button onClick={onClose}>
@@ -585,7 +594,7 @@ function AircraftModal({ aircraft, onClose, onUpdateHours }) {
         if (!newHours) return;
         onUpdateHours(aircraft.id, newHours);
       }}
-      className="bg-[#3C498B] text-white px-4 py-2 rounded-xl text-sm"
+      className="bg-[#3C498B] text-white px-5 py-2 rounded-xl text-sm"
     >
       Update Flight Hours
     </button>
@@ -678,6 +687,16 @@ function AircraftModal({ aircraft, onClose, onUpdateHours }) {
 /* -------------------------------------------------------------------------- */
 
 function AddAircraftModal({ onClose, onSave }) {
+
+  useEffect(() => {
+  const originalStyle = window.getComputedStyle(document.body).overflow;
+  document.body.style.overflow = "hidden";
+
+  return () => {
+    document.body.style.overflow = originalStyle;
+  };
+}, []);
+
   const [form, setForm] = useState({
     model: "",
     serial: "",

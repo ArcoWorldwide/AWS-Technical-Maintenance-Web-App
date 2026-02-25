@@ -484,6 +484,13 @@ function CompletionButton({ item, onComplete }) {
 
 /* -------------------------- DETAIL MODAL -------------------------- */
 function DetailModal({ item, onClose }) {
+  useEffect(() => {
+  document.body.style.overflow = "hidden";
+
+  return () => {
+    document.body.style.overflow = "auto";
+  };
+}, []);
   const handleExportPDF = () => {
     const doc = new jsPDF();
     doc.text(`Maintenance Report - ${item.aircraftModel}`, 10, 10);
@@ -502,15 +509,15 @@ function DetailModal({ item, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 z-50 flex justify-center items-start pt-10 overflow-auto p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-5xl p-4 md:p-6 relative">
+    <div className="fixed inset-0 bg-white z-50 overflow-auto">
+      <div className="w-full min-h-screen p-6 md:p-10 relative">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 text-gray-500 text-lg md:text-xl"
         >
           <FiX />
         </button>
-        <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">
+        <h2 className="text-xl mt-6 md:text-2xl font-bold mb-3 md:mb-4">
           Maintenance Request Details
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
@@ -573,6 +580,14 @@ function RequestModal({ onClose, onSubmit, prefillData }) {
 
   const [suggestions, setSuggestions] = useState([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+  document.body.style.overflow = "hidden";
+
+  return () => {
+    document.body.style.overflow = "auto";
+  };
+}, []);
 
   useEffect(() => {
     if (form.aircraftModel) {
