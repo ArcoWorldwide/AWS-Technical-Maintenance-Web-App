@@ -179,41 +179,36 @@ function useLockBodyScroll() {
 function ViewReportModal({ report, onClose }) {
   useLockBodyScroll();
 
-  return (
-    <div className="fixed inset-0 z-50 bg-white overflow-y-auto">
-      <div className="max-w-5xl mx-auto p-6 sm:p-10 relative min-h-screen">
-        <button
-          onClick={onClose}
-          className="fixed top-6 right-6 text-gray-600 hover:text-gray-900 z-50"
-        >
-          <FiX size={22} />
-        </button>
-
-        <h3 className="text-2xl sm:text-3xl font-bold mb-2">
-          {report.title}
-        </h3>
-        <p className="text-sm text-gray-500 mb-6">{report.date}</p>
-
-        <p className="text-base text-gray-700 mb-8 leading-relaxed">
-          {report.content}
-        </p>
-
-        {report.pdfUrl ? (
-          <div className="border rounded-xl overflow-hidden h-[600px]">
-            <iframe
-              src={report.pdfUrl}
-              title="PDF Preview"
-              className="w-full h-full"
-            />
-          </div>
-        ) : (
-          <p className="text-sm text-gray-400 italic">
-            No PDF attached to this report.
-          </p>
-        )}
+return (
+  <div className="fixed inset-0 z-50 bg-white flex flex-col">
+    <div className="flex justify-between items-center p-4 bg-white shadow">
+      <div>
+        <h3 className="text-lg font-semibold">{report.title}</h3>
+        <p className="text-xs text-gray-500">{report.date}</p>
       </div>
+
+      <button
+        onClick={onClose}
+        className="text-gray-600 hover:text-gray-900"
+      >
+        <FiX size={22} />
+      </button>
     </div>
-  );
+
+    {report.pdfUrl ? (
+      <iframe
+        src={`${report.pdfUrl}#toolbar=1`}
+        title="PDF Preview"
+        className="flex-1 w-full"
+        style={{ border: "none" }}
+      />
+    ) : (
+      <div className="p-6 text-gray-500">
+        No PDF attached to this report.
+      </div>
+    )}
+  </div>
+);
 }
 
 /* -------------------------------------------------------------------------- */

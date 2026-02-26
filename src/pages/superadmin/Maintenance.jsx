@@ -541,7 +541,7 @@ function DetailModal({ item, onClose }) {
         {item.completionReport && (
           <div className="mt-3 md:mt-4">
             <h4 className="font-semibold mb-1 text-sm md:text-base">Completion Report</h4>
-            <p className="text-gray-600 text-xs md:text-sm">
+            <p className="text-gray-600 text-xs font-semibold md:text-sm">
               Title: {item.completionReport.title}
             </p>
             <p className="text-gray-600 text-xs md:text-sm">
