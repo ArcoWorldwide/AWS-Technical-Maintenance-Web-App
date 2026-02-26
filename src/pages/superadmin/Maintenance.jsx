@@ -547,9 +547,28 @@ function DetailModal({ item, onClose }) {
             <p className="text-gray-600 text-xs md:text-sm">
               Summary: {item.completionReport.summary}
             </p>
-            <p className="text-gray-600 text-xs md:text-sm">
-              File: {item.completionReport.file.name}
-            </p>
+
+            {/* remember to change so it can save to the backend. Currently it is tempoarlily saving to just localhost
+            and would disappear on refresh.*/}
+
+{item.completionReport.file && (
+  <div className="mt-2">
+    <p className="text-xs md:text-sm text-gray-500 mb-1">
+      Attached File
+    </p>
+
+    <a
+      href={URL.createObjectURL(item.completionReport.file)}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-xs md:text-sm underline"
+    >
+      <FiDownload />
+      {item.completionReport.file.name}
+    </a>
+  </div>
+)}
           </div>
         )}
 
