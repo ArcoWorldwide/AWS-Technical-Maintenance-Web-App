@@ -621,18 +621,18 @@ function RequestModal({ onClose, onSubmit, prefillData }) {
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-start pt-10 overflow-auto p-4">
-      <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-4 md:p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 text-lg md:text-xl"
-        >
-          <FiX />
-        </button>
-        <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">
-          Request Maintenance
-        </h2>
+return (
+  <div className="fixed inset-0 bg-black/40 z-50 flex justify-center items-center overflow-auto p-4">
+    <div className="bg-white rounded-xl shadow-lg w-full max-w-3xl p-4 md:p-6 relative">
+      <button
+        onClick={onClose}
+        className="absolute top-3 right-3 text-gray-500 text-lg md:text-xl"
+      >
+        <FiX />
+      </button>
+      <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">
+        Request Maintenance
+      </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {/* Aircraft Model */}
           <div className="relative">

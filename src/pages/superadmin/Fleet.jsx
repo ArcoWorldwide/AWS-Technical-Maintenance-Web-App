@@ -364,32 +364,32 @@ export default function FleetPage() {
                   gap-3">
 
     {/* Title Section */}
-    <div>
-      <h1 className="text-lg sm:text-2xl font-semibold sm:font-bold text-gray-800">
+    <div className="flex flex-col gap-1">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
         Fleet Management
       </h1>
-      <p className="text-[11px] sm:text-sm text-gray-500 mt-1">
+      <p className="text-[12px] sm:text-sm text-gray-500 mt-0.5">
         UAV lifecycle monitoring & maintenance overview
       </p>
     </div>
 
     {/* Controls */}
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mt-2 sm:mt-0">
 
       {/* Filter */}
       <select
-className="
-  w-full sm:w-44
-  border border-gray-200
-  bg-gray-50
-  rounded-lg
-  px-3 py-2
-  text-sm
-  focus:outline-none
-  focus:ring-2
-  focus:ring-[#3C498B]/30
-  transition
-"
+        className="
+          w-full sm:w-44
+          border border-gray-200
+          bg-gray-50
+          rounded-lg
+          px-3 py-2
+          text-sm
+          focus:outline-none
+          focus:ring-2
+          focus:ring-[#3C498B]/30
+          transition
+        "
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       >
@@ -417,19 +417,23 @@ className="
           Add Aircraft
         </button>
 
-        {/* Mobile Icon Button */}
+        {/* Mobile Button (Bigger Tap Area + Card Style) */}
         <button
           onClick={() => setShowAddModal(true)}
           className="
             sm:hidden flex items-center justify-center
             bg-[#3C498B] text-white
-            p-1.5
-            rounded-sm
+            py-2
+            rounded-lg
             hover:opacity-90 transition
+            shadow-md
           "
           aria-label="Add Aircraft"
         >
-          <FiPlus size={14} />
+          <div className="flex items-center gap-2 px-4">
+            <FiPlus size={16} />
+            <span className="text-sm font-semibold">Add Aircraft</span>
+          </div>
         </button>
 
       </CanAccess>
@@ -850,41 +854,31 @@ function AddAircraftModal({ onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
-    <div className="bg-white w-full h-full sm:h-auto sm:max-w-6xl 
-                sm:rounded-2xl sm:mx-auto 
-                p-6 sm:p-8">        <div className="flex justify-between mt-10 items-center mb-6">
-          <h2 className="text-2xl font-bold">Add New Aircraft</h2>
-          <button onClick={onClose}>
-            <FiX />
-          </button>
-        </div>
-
-        <form
-          onSubmit={handleSubmit}
-          className="grid md:grid-cols-3 gap-4 text-sm"
-        >
-{Object.keys(form).map((field) => (
-  <Input
-    key={field}
-    label={field}
-    name={field}
-    value={form[field]}
-    onChange={handleChange}
-  />
-))}
-
-          <div className="md:col-span-3 flex justify-end gap-3 mt-4">
-            <button type="button" onClick={onClose}>
-              Cancel
-            </button>
-            <button className="bg-[#3C498B] text-white px-6 py-2 rounded-xl">
-              Save Aircraft
-            </button>
-          </div>
-        </form>
-      </div>
+<div className="fixed inset-0 z-50 flex justify-center items-start bg-black/40 overflow-y-auto">
+  <div className="bg-white w-full h-full p-6 md:p-8 overflow-y-auto">
+    <div className="flex justify-between mt-6 mb-6">
+      <h2 className="text-2xl font-bold">Add New Aircraft</h2>
+      <button onClick={onClose}>
+        <FiX />
+      </button>
     </div>
+
+    <form className="grid md:grid-cols-3 gap-4 text-sm" onSubmit={handleSubmit}>
+      {Object.keys(form).map((field) => (
+        <Input key={field} label={field} name={field} value={form[field]} onChange={handleChange} />
+      ))}
+
+      <div className="md:col-span-3 flex justify-end gap-3 mt-4">
+        <button type="button" onClick={onClose}>
+          Cancel
+        </button>
+        <button className="bg-[#3C498B] text-white px-6 py-2 rounded-xl">
+          Save Aircraft
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
   );
 }
 
