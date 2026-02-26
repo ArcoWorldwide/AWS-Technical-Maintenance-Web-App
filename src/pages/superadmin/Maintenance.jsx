@@ -136,10 +136,10 @@ const workBadge = (status) => {
     declined: "bg-red-100 text-red-800",
   };
   const label = {
-    pending: "Pending",
-    in_progress: "In-Progress",
-    done: "Completed",
-    declined: "Declined",
+    pending: "PENDING",
+    in_progress: "IN-PROGRESS",
+    done: "COMPLETED",
+    declined: "DECLINED",
   };
   return (
 <span

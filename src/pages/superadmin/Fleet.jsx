@@ -378,13 +378,18 @@ export default function FleetPage() {
 
       {/* Filter */}
       <select
-        className="
-          border rounded-sm 
-          px-2 py-1 
-          sm:px-3 sm:py-1.5 
-          text-xs sm:text-sm
-          w-full sm:w-auto
-        "
+className="
+  w-full sm:w-44
+  border border-gray-200
+  bg-gray-50
+  rounded-lg
+  px-3 py-2
+  text-sm
+  focus:outline-none
+  focus:ring-2
+  focus:ring-[#3C498B]/30
+  transition
+"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       >
@@ -462,12 +467,24 @@ export default function FleetPage() {
     className="relative bg-white rounded-2xl shadow p-5 text-left hover:shadow-md transition"
   >
 
-    {(isApproachingMaintenance(aircraft) ||
-      isOverdueMaintenance(aircraft)) && (
-      <span className="absolute top-3 right-3 text-red-600 text-lg">
-        ●
-      </span>
-    )}
+{isOverdueMaintenance(aircraft) && (
+  <span className="absolute top-3 right-3 
+                   bg-red-100 text-red-700 
+                   text-[10px] font-semibold 
+                   px-2 py-1 rounded-full">
+    Overdue
+  </span>
+)}
+
+{!isOverdueMaintenance(aircraft) &&
+  isApproachingMaintenance(aircraft) && (
+    <span className="absolute top-3 right-3 
+                     bg-yellow-100 text-yellow-700 
+                     text-[10px] font-semibold 
+                     px-2 py-1 rounded-full">
+      Due Soon
+    </span>
+)}
 
     <h3 className="font-semibold text-gray-800 mb-1">
       {aircraft.model}
@@ -551,132 +568,221 @@ export default function FleetPage() {
 /* -------------------------------------------------------------------------- */
 
 function AircraftModal({ aircraft, onClose, onUpdateHours }) {  
-
   useEffect(() => {
-  const originalStyle = window.getComputedStyle(document.body).overflow;
-  document.body.style.overflow = "hidden";
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = "hidden";
 
-  return () => {
-    document.body.style.overflow = originalStyle;
-  };
-}, []);
-   const navigate = useNavigate(); 
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
+  const navigate = useNavigate(); 
+
   return (
-<div className="fixed inset-0 bg-black/40 z-50 flex">
-  <div className="bg-white w-full h-full overflow-y-auto p-8">
-        <div className="flex justify-between items-center mt-10 mb-6">
-          <h2 className="text-lg sm:text-2xl font-bold">{aircraft.model}</h2>
-          <button onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 z-50 flex">
+      <div className="bg-white w-full h-full overflow-y-auto px-6 sm:px-10 py-8">
+        <div className="flex justify-between items-start mt-6 mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">
+              {aircraft.model}
+            </h2>
+            <div className="mt-3 flex gap-2 flex-wrap">
+              <span
+                className={`text-xs px-3 py-1 rounded-full font-medium
+                  ${
+                    aircraft.status === "In Service"
+                      ? "bg-green-100 text-green-700"
+                      : aircraft.status === "Under Maintenance"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+              >
+                {aircraft.status}
+              </span>
+            </div>
+          </div>
+
+          <button 
+            onClick={onClose}
+            className="p-2 rounded-lg hover:bg-gray-100 transition"
+          >
             <FiX />
           </button>
         </div>
 
+        {/* Aircraft Details Grid */}
         <div className="grid md:grid-cols-3 gap-4 text-sm">
           {Object.entries(aircraft).map(([key, value]) => {
-            if (key === "history" || key === "scheduledMaintenance")
-              return null;
-
-            return (
-              <Info
-                key={key}
-                label={key}
-                value={value?.toString()}
-              />
-            );
+            if (key === "history" || key === "scheduledMaintenance") return null;
+            return <Info key={key} label={key} value={value?.toString()} />;
           })}
         </div>
 
-<CanAccess permission={PERMISSIONS.EDIT_FLEET}>
-  <div className="mt-6 flex justify-end">
-    <button
-      onClick={() => {
-        const newHours = prompt("Enter new flight hours:");
-        if (!newHours) return;
-        onUpdateHours(aircraft.id, newHours);
-      }}
-      className="bg-[#3C498B] text-white px-5 py-2 rounded-xl text-sm"
-    >
-      Update Flight Hours
-    </button>
-  </div>
-</CanAccess>
+        {/* Actions */}
+        <CanAccess permission={PERMISSIONS.EDIT_FLEET}>
+          <div className="mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <button
+              onClick={() => {
+                const newHours = prompt("Enter new flight hours:");
+                if (!newHours) return;
+                onUpdateHours(aircraft.id, newHours);
+              }}
+              className="
+                w-full sm:w-auto
+                bg-[#3C498B] text-white
+                px-3 sm:px-4
+                py-1.5 sm:py-2
+                text-xs sm:text-sm
+                rounded-md sm:rounded-lg
+                hover:opacity-90 transition
+              "
+            >
+              Update Hours
+            </button>
 
-<div className="mt-4 flex justify-end">
-  <button
-    onClick={() => {
-      const maintenancePayload = {
-        aircraftId: aircraft.id,
-        model: aircraft.model,
-        serial: aircraft.serial,
-        manufacturer: aircraft.manufacturer,
-        type: aircraft.type,
-        location: aircraft.location,
-        flightHours: aircraft.flightHours,
-        status: aircraft.status,
-      };
+            <button
+              onClick={() => {
+                const maintenancePayload = {
+                  aircraftId: aircraft.id,
+                  model: aircraft.model,
+                  serial: aircraft.serial,
+                  manufacturer: aircraft.manufacturer,
+                  type: aircraft.type,
+                  location: aircraft.location,
+                  flightHours: aircraft.flightHours,
+                  status: aircraft.status,
+                };
 
-      // Save data so Maintenance page can auto-fill
-      localStorage.setItem(
-        "prefilledMaintenance",
-        JSON.stringify(maintenancePayload)
-      );
+                localStorage.setItem(
+                  "prefilledMaintenance",
+                  JSON.stringify(maintenancePayload)
+                );
 
-      // Redirect
-      navigate("/dashboard/maintenance");
-    }}
-    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm transition"
-  >
-    Request Maintenance
-  </button>
-</div> 
+                navigate("/dashboard/maintenance");
+              }}
+              className="
+                w-full sm:w-auto
+                bg-red-600 hover:bg-red-700 text-white
+                px-3 sm:px-4
+                py-1.5 sm:py-2
+                text-xs sm:text-sm
+                rounded-md sm:rounded-lg
+                transition
+              "
+            >
+              Request Maintenance
+            </button>
+          </div>
+        </CanAccess>
 
-        {/* Scheduled Maintenance */}
-        <h3 className="mt-8 font-semibold">
-          Scheduled Maintenance Reasons
-        </h3>
-<select
-  className="mt-3 border rounded-xl px-3 py-2 text-sm w-full"
-  defaultValue=""
-  onChange={(e) => {
-    const selectedReason = e.target.value;
-    if (!selectedReason) return;
+        {/* Maintenance Overview */}
+        <div className="mt-10 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-[#3C498B]/10 p-2 rounded-lg">
+              <FiTool className="text-[#3C498B]" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-800">
+                Maintenance Overview
+              </h3>
+              <p className="text-xs text-gray-500">
+                Scheduled service & inspection tracking
+              </p>
+            </div>
+          </div>
 
-    const maintenancePayload = {
-      aircraftId: aircraft.id,
-      model: aircraft.model,
-      serial: aircraft.serial,
-      reason: selectedReason,
-      flightHours: aircraft.flightHours,
-    };
+          <div className="bg-gradient-to-r from-white to-gray-50 border rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Current Flight Hours</p>
+              <p className="text-2xl font-bold text-gray-800">{aircraft.flightHours} hrs</p>
+            </div>
 
-    localStorage.setItem(
-      "prefilledMaintenance",
-      JSON.stringify(maintenancePayload)
-    );
+            <div>
+              {isOverdueMaintenance(aircraft) && (
+                <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  Overdue Maintenance
+                </span>
+              )}
 
-    navigate("/dashboard/maintenance");
-  }}
->
-  <option value="">Select Maintenance Reason</option>
+              {!isOverdueMaintenance(aircraft) && isApproachingMaintenance(aircraft) && (
+                <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  Maintenance Due Soon
+                </span>
+              )}
 
-  {(
-    MAINTENANCE_CONFIG[aircraft.manufacturer?.toUpperCase()] ||
-    MAINTENANCE_CONFIG[aircraft.type?.toUpperCase()] ||
-    MAINTENANCE_CONFIG.GENERAL
-  ).scheduled.map((item) => (
-    <option key={item.code} value={item.label}>
-      {item.label}
-    </option>
-  ))}
-</select>
+              {!isOverdueMaintenance(aircraft) && !isApproachingMaintenance(aircraft) && (
+                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  Maintenance Up To Date
+                </span>
+              )}
+            </div>
+          </div>
 
-        {/* Maintenance History */}
-        <h3 className="mt-8 font-semibold">Maintenance History</h3>
-        {aircraft.history.length === 0 && (
-          <p className="text-sm text-gray-500 mt-3">
-            No records available.
-          </p>
-        )}
+          {/* Schedule Maintenance */}
+          <div className="bg-white border rounded-2xl p-5 space-y-4">
+            <h4 className="text-sm font-semibold text-gray-700">Schedule Maintenance</h4>
+            <select
+              className="w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#3C498B]/30 transition"
+              defaultValue=""
+              onChange={(e) => {
+                const selectedReason = e.target.value;
+                if (!selectedReason) return;
+
+                const maintenancePayload = {
+                  aircraftId: aircraft.id,
+                  model: aircraft.model,
+                  serial: aircraft.serial,
+                  reason: selectedReason,
+                  flightHours: aircraft.flightHours,
+                };
+
+                localStorage.setItem(
+                  "prefilledMaintenance",
+                  JSON.stringify(maintenancePayload)
+                );
+
+                navigate("/dashboard/maintenance");
+              }}
+            >
+              <option value="">Select inspection type</option>
+              {(
+                MAINTENANCE_CONFIG[aircraft.manufacturer?.toUpperCase()] ||
+                MAINTENANCE_CONFIG[aircraft.type?.toUpperCase()] ||
+                MAINTENANCE_CONFIG.GENERAL
+              ).scheduled.map((item) => (
+                <option key={item.code} value={item.label}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Maintenance History */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-4">Maintenance History</h4>
+            {aircraft.history.length === 0 ? (
+              <div className="bg-gray-50 border rounded-xl p-6 text-center text-sm text-gray-500">
+                No maintenance records yet.
+              </div>
+            ) : (
+              <div className="relative border-l-2 border-gray-200 ml-3 space-y-6">
+                {aircraft.history.map((item, index) => (
+                  <div key={index} className="relative pl-6">
+                    <div className="absolute -left-[9px] top-2 w-4 h-4 bg-[#3C498B] rounded-full border-4 border-white shadow" />
+                    <div className="bg-gray-50 border rounded-xl p-4">
+                      <div className="flex justify-between items-center">
+                        <h5 className="font-semibold text-sm text-gray-800">{item.title}</h5>
+                        <span className="text-xs text-gray-500">{item.date}</span>
+                      </div>
+                      <p className="text-xs text-gray-600 mt-2">{item.notes}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -745,8 +851,9 @@ function AddAircraftModal({ onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto">
-      <div className="bg-white mx-auto shadow-xl p-8">
-        <div className="flex justify-between mt-10 items-center mb-6">
+    <div className="bg-white w-full h-full sm:h-auto sm:max-w-6xl 
+                sm:rounded-2xl sm:mx-auto 
+                p-6 sm:p-8">        <div className="flex justify-between mt-10 items-center mb-6">
           <h2 className="text-2xl font-bold">Add New Aircraft</h2>
           <button onClick={onClose}>
             <FiX />
@@ -787,11 +894,11 @@ function AddAircraftModal({ onClose, onSave }) {
 
 function Info({ label, value }) {
   return (
-    <div className="bg-gray-50 rounded-xl p-4">
-      <div className="text-xs text-gray-500 capitalize">
-        {label}
+    <div className="bg-white border rounded-xl p-4">
+      <div className="text-xs text-gray-400 capitalize mb-1">
+        {label.replace(/([A-Z])/g, " $1")}
       </div>
-      <div className="font-medium break-words">
+      <div className="font-medium text-gray-800 break-words">
         {value || "-"}
       </div>
     </div>

@@ -402,7 +402,7 @@ export default function BatteryPage() {
 
       {/* TABS */}
       <div className="max-w-[1600px] mx-auto mt-4 flex gap-2 flex-wrap">
-        {["IN_USE", "IN_STORE", "DECOMMISSIONED"].map(
+        {["IN_STORE", "IN_USE",  "DECOMMISSIONED"].map(
           (t) => (
             <button
               key={t}
