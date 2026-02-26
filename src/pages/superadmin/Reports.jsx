@@ -179,36 +179,89 @@ function useLockBodyScroll() {
 function ViewReportModal({ report, onClose }) {
   useLockBodyScroll();
 
-return (
-  <div className="fixed inset-0 z-50 bg-white flex flex-col">
-    <div className="flex justify-between items-center p-4 bg-white shadow">
-      <div>
-        <h3 className="text-lg font-semibold">{report.title}</h3>
-        <p className="text-xs text-gray-500">{report.date}</p>
-      </div>
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4">
+      
+      {/* Modal Container */}
+      <div className="bg-white w-full max-w-6xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden">
 
-      <button
-        onClick={onClose}
-        className="text-gray-600 hover:text-gray-900"
-      >
-        <FiX size={22} />
-      </button>
-    </div>
+        {/* HEADER */}
+        <div className="flex justify-between items-center px-6 py-4 border-b bg-gray-50">
+          <div>
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
+              {report.title}
+            </h3>
+            <p className="text-xs text-gray-500">{report.date}</p>
+          </div>
 
-    {report.pdfUrl ? (
-      <iframe
-        src={`${report.pdfUrl}#toolbar=1`}
-        title="PDF Preview"
-        className="flex-1 w-full"
-        style={{ border: "none" }}
-      />
-    ) : (
-      <div className="p-6 text-gray-500">
-        No PDF attached to this report.
-      </div>
-    )}
+          <div className="flex items-center gap-4">
+            {report.pdfUrl && (
+              <>
+                <a
+                  href={report.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-[#3C498B] hover:underline"
+                >
+                  Open in new tab
+                </a>
+
+                <a
+                  href={report.pdfUrl}
+                  download
+                  className="text-sm text-[#3C498B] hover:underline"
+                >
+                  Download
+                </a>
+              </>
+            )}
+
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-800"
+            >
+              <FiX size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* BODY */}
+        <div className="flex-1 bg-gray-100 p-6 overflow-auto">
+          <div className="max-w-4xl mx-auto space-y-6">
+
+            {/* Report Text */}
+            <div className="bg-white p-5 rounded-xl shadow-sm">
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {report.content}
+              </p>
+            </div>
+
+            {/* PDF Viewer */}
+            {report.pdfUrl ? (
+<div className="bg-white rounded-xl shadow-md overflow-hidden w-full">
+  <div className="w-full overflow-x-hidden">
+    <iframe
+      src={`${report.pdfUrl}#toolbar=1&navpanes=0&view=FitH`}
+      title="PDF Preview"
+      className="w-full h-[75vh] block"
+      style={{
+        border: "none",
+        overflow: "hidden"
+      }}
+      scrolling="no"
+    />
   </div>
-);
+</div>
+            ) : (
+              <div className="text-center text-gray-400 py-10">
+                No PDF attached to this report.
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* -------------------------------------------------------------------------- */
