@@ -1,11 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
 import { FiPlus, FiEdit, FiTrash2, FiSearch, FiX } from "react-icons/fi";
 
-// API base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Roles
+// Role labels (Display)
 const ROLES = ["Superadmin", "Admin", "Technical", "COO", "MD", "QHSE"];
+
+// Backend roles are lowercase
+const normalizeRole = (role) => {
+  if (!role) return "";
+  return role.charAt(0).toUpperCase() + role.slice(1);
+};
 
 const roleColors = {
   Superadmin: "bg-purple-100 text-purple-700",
@@ -26,151 +31,175 @@ export default function SuperAdminUsers() {
 
   const token = localStorage.getItem("token");
 
-  // Fetch users from backend on load
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`${API_BASE_URL}/auth/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Failed to fetch users");
-        const data = await res.json();
-        setUsers(data);
-      } catch (err) {
-        console.error(err);
-        setError(err.message || "Could not fetch users");
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (token) fetchUsers();
-  }, [token]);
-
-  // Filtered users
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const matchesSearch =
-        u.name.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase());
-      const matchesRole = roleFilter === "All" || u.role === roleFilter;
-      return matchesSearch && matchesRole;
-    });
-  }, [users, search, roleFilter]);
-
-  // Save user (create)
-  const saveUser = async (data) => {
+  // ===============================
+  // FETCH USERS
+  // ===============================
+  const fetchUsers = async () => {
     setLoading(true);
     setError("");
+
     try {
-      let updatedUsers = [...users];
+      const res = await fetch(`${API_BASE_URL}/auth/users/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (editingUser?.id) {
-        // TODO: implement backend edit (PATCH) if exists
-        updatedUsers = updatedUsers.map((u) =>
-          u.id === editingUser.id ? { ...u, ...data } : u
-        );
-      } else {
-        // Create user backend call
-        const res = await fetch(`${API_BASE_URL}/auth/users/create`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            name: data.name,
-            email: data.email,
-            role: data.role.toLowerCase(),
-          }),
-        });
+      if (!res.ok) throw new Error("Failed to fetch users");
 
-        if (!res.ok) {
-          const resData = await res.json();
-          throw new Error(resData.message || "Failed to create user");
-        }
+      const data = await res.json();
 
-        const newUser = await res.json(); // backend should return created user
-
-        // If backend doesn't return user, fallback:
-        updatedUsers.push({
-          ...data,
-          id: newUser?.id || Date.now(),
-          createdAt: newUser?.createdAt || new Date().toISOString().split("T")[0],
-        });
+      if (!Array.isArray(data)) {
+        setUsers([]);
+        return;
       }
 
-      setUsers(updatedUsers);
-      setEditingUser(null);
+      // Normalize roles and id
+      const formatted = data.map((u) => ({
+        ...u,
+        id: u._id,
+        role: normalizeRole(u.role),
+      }));
+
+      setUsers(formatted);
     } catch (err) {
       console.error(err);
-      setError(err.message || "Something went wrong");
+      setError(err.message || "Could not fetch users");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (token) fetchUsers();
+  }, [token]);
+
+  // ===============================
+  // FILTER USERS
+  // ===============================
+  const filteredUsers = useMemo(() => {
+    return users.filter((u) => {
+      const matchesSearch =
+        u.name?.toLowerCase().includes(search.toLowerCase()) ||
+        u.email?.toLowerCase().includes(search.toLowerCase());
+
+      const matchesRole = roleFilter === "All" || u.role === roleFilter;
+
+      return matchesSearch && matchesRole;
+    });
+  }, [users, search, roleFilter]);
+
+  // ===============================
+  // CREATE OR UPDATE
+  // ===============================
+const saveUser = async (form) => {
+  setLoading(true);
+  setError("");
+
+  try {
+    const payload = {
+      name: form.name,
+      email: form.email,
+      role: form.role.toLowerCase(),
+    };
+
+    let res;
+
+    if (editingUser?.id) {
+      // UPDATE (assuming PATCH exists)
+      res = await fetch(
+        `${API_BASE_URL}/auth/users/${editingUser.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+    } else {
+      // ✅ CORRECT CREATE ROUTE
+      res = await fetch(
+        `${API_BASE_URL}/auth/users/create`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+    }
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      throw new Error(data.message || `HTTP ${res.status}`);
+    }
+
+    await fetchUsers();
+    setEditingUser(null);
+  } catch (err) {
+    console.error("SAVE ERROR:", err);
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // ===============================
+  // DELETE
+  // ===============================
   const deleteUser = async (id) => {
     if (!window.confirm("Delete this user?")) return;
+
+    setLoading(true);
+    setError("");
 
     try {
       const res = await fetch(`${API_BASE_URL}/auth/users/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
+
       if (!res.ok) throw new Error("Failed to delete user");
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+
+      await fetchUsers();
     } catch (err) {
       console.error(err);
-      setError(err.message || "Could not delete user");
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen px-4 py-6 md:ml-64">
-      {/* HEADER */}
-      <div className="bg-white border rounded-xl p-4 sm:p-6 flex items-center justify-between">
+      <div className="bg-white border rounded-xl p-6 flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">User Management</h1>
-          <p className="text-xs text-gray-500">{filteredUsers.length} total users</p>
-          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+          <h1 className="text-xl font-semibold">User Management</h1>
+          <p className="text-xs text-gray-500">
+            {filteredUsers.length} total users
+          </p>
+          {error && (
+            <p className="text-red-500 text-xs mt-2">{error}</p>
+          )}
         </div>
 
         <button
           onClick={() => setEditingUser({})}
-          className="h-10 w-10 sm:w-auto sm:px-4 sm:py-2 rounded-md bg-[#3C498B] text-white flex items-center justify-center gap-2 text-sm hover:bg-[#3C498B]"
+          className="px-4 py-2 bg-[#3C498B] text-white rounded-md flex items-center gap-2"
         >
-          <FiPlus />
-          <span className="hidden sm:inline">Add User</span>
+          <FiPlus /> Add User
         </button>
       </div>
 
-      {/* FILTERS */}
-      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-3 text-gray-400" />
-          <input
-            className="w-full pl-10 pr-3 py-2 text-sm border rounded-lg"
-            placeholder="Search users"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <select
-          className="border rounded-lg px-3 py-2 text-sm"
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-        >
-          <option value="All">All Roles</option>
-          {ROLES.map((r) => (
-            <option key={r}>{r}</option>
-          ))}
-        </select>
-      </div>
-
       {/* TABLE */}
-      <div className="hidden md:block mt-6 bg-white border rounded-xl overflow-x-auto">
+      <div className="mt-6 bg-white border rounded-xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
@@ -182,29 +211,41 @@ export default function SuperAdminUsers() {
           </thead>
           <tbody>
             {filteredUsers.map((u) => (
-              <tr key={u.id} className="border-t hover:bg-gray-50">
+              <tr key={u.id} className="border-t">
                 <td className="px-4 py-3">
                   <div className="font-medium">{u.name}</div>
-                  <div className="text-xs text-gray-500">{u.email}</div>
+                  <div className="text-xs text-gray-500">
+                    {u.email}
+                  </div>
                 </td>
+
                 <td className="px-4 py-3">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs ${roleColors[u.role]}`}
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      roleColors[u.role] || "bg-gray-100"
+                    }`}
                   >
                     {u.role}
                   </span>
                 </td>
-                <td className="px-4 py-3">{u.createdAt}</td>
+
+                <td className="px-4 py-3">
+                  {u.createdAt
+                    ? new Date(u.createdAt).toLocaleDateString()
+                    : "-"}
+                </td>
+
                 <td className="px-4 py-3 flex justify-end gap-2">
                   <button
                     onClick={() => setEditingUser(u)}
-                    className="p-2 rounded hover:bg-gray-100"
+                    className="p-2 hover:bg-gray-100 rounded"
                   >
                     <FiEdit />
                   </button>
+
                   <button
                     onClick={() => deleteUser(u.id)}
-                    className="p-2 rounded hover:bg-red-100 text-red-600"
+                    className="p-2 hover:bg-red-100 text-red-600 rounded"
                   >
                     <FiTrash2 />
                   </button>
@@ -213,33 +254,6 @@ export default function SuperAdminUsers() {
             ))}
           </tbody>
         </table>
-      </div>
-
-      {/* MOBILE CARDS */}
-      <div className="md:hidden mt-6 space-y-3">
-        {filteredUsers.map((u) => (
-          <div key={u.id} className="bg-white border rounded-xl p-4 space-y-2">
-            <div className="font-semibold">{u.name}</div>
-            <div className="text-xs text-gray-500">{u.email}</div>
-            <span
-              className={`inline-block text-xs px-2 py-1 rounded-full ${roleColors[u.role]}`}
-            >
-              {u.role}
-            </span>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button onClick={() => setEditingUser(u)} className="p-2 rounded bg-gray-100">
-                <FiEdit size={14} />
-              </button>
-              <button
-                onClick={() => deleteUser(u.id)}
-                className="p-2 rounded bg-red-100 text-red-600"
-              >
-                <FiTrash2 size={14} />
-              </button>
-            </div>
-          </div>
-        ))}
       </div>
 
       {editingUser && (
@@ -254,7 +268,9 @@ export default function SuperAdminUsers() {
   );
 }
 
-// Modal Component
+// ===============================
+// MODAL
+// ===============================
 function UserModal({ user, onClose, onSave, loading }) {
   const [form, setForm] = useState({
     name: user?.name || "",
@@ -263,33 +279,36 @@ function UserModal({ user, onClose, onSave, loading }) {
   });
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
       <div className="bg-white w-full max-w-md rounded-xl p-5 space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold">{user?.id ? "Edit User" : "Add User"}</h2>
-          <button onClick={onClose}>
-            <FiX />
-          </button>
-        </div>
+        <h2 className="font-semibold text-lg">
+          {user?.id ? "Edit User" : "Add User"}
+        </h2>
 
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          className="w-full border rounded-lg px-3 py-2"
           placeholder="Full Name"
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, name: e.target.value })
+          }
         />
 
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          className="w-full border rounded-lg px-3 py-2"
           placeholder="Email"
           value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, email: e.target.value })
+          }
         />
 
         <select
-          className="w-full border rounded-lg px-3 py-2 text-sm"
+          className="w-full border rounded-lg px-3 py-2"
           value={form.role}
-          onChange={(e) => setForm({ ...form, role: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, role: e.target.value })
+          }
         >
           {ROLES.map((r) => (
             <option key={r}>{r}</option>
@@ -299,14 +318,15 @@ function UserModal({ user, onClose, onSave, loading }) {
         <div className="flex justify-end gap-2 pt-3">
           <button
             onClick={onClose}
-            className="px-3 py-2 text-sm border rounded-lg"
+            className="px-4 py-2 border rounded-lg"
           >
             Cancel
           </button>
+
           <button
             onClick={() => onSave(form)}
-            className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50"
             disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
           >
             {loading ? "Saving..." : "Save"}
           </button>
