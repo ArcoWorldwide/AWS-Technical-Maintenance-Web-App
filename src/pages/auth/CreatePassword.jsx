@@ -2,30 +2,33 @@ import { useState, useEffect } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-// Use .env for API base URL
+// API base URL from .env
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CreatePassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Read UID from URL query param: /create-password?uid=6994eabc2b3141fee34b5e34
+  // Get UID from URL: /createpassword?uid=abc123
   const searchParams = new URLSearchParams(location.search);
   const uid = searchParams.get("uid");
 
-  const [email, setEmail] = useState(""); // Comes from server
+  // Form state
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetchingEmail, setFetchingEmail] = useState(true);
 
   // Fetch email from backend using UID
   useEffect(() => {
     if (!uid) {
-      setError("Invalid password setup link.");
       setFetchingEmail(false);
       return;
     }
@@ -36,13 +39,12 @@ const CreatePassword = () => {
         const data = await response.json();
 
         if (!response.ok) {
-          setError(data.message || "Failed to fetch email.");
+          setError(data.message || "Invalid or expired link.");
         } else {
           setEmail(data.email);
         }
       } catch (err) {
-        console.error(err);
-        setError("Something went wrong fetching your email.");
+        setError("Unable to verify link. Please try again.");
       } finally {
         setFetchingEmail(false);
       }
@@ -51,29 +53,27 @@ const CreatePassword = () => {
     fetchEmail();
   }, [uid]);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
 
+    // Validation
     if (!password || !confirmPassword) {
-      setError("All fields are required.");
-      return;
+      return setError("All fields are required.");
     }
-
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
+      return setError("Password must be at least 6 characters.");
     }
-
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
+      return setError("Passwords do not match.");
     }
 
     setLoading(true);
 
     try {
-      // Create password
+      // Call backend API to create password
       const response = await fetch(`${API_BASE_URL}/auth/create-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -84,43 +84,52 @@ const CreatePassword = () => {
 
       if (!response.ok) {
         setError(data.message || "Failed to create password.");
-        setLoading(false);
         return;
       }
 
-      // Auto-login after password creation
-      const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      // Success
+      setSuccess("Password created successfully! Redirecting to login...");
 
-      const loginData = await loginResponse.json();
-
-      if (!loginResponse.ok) {
-        setError(loginData.message || "Password created, but auto-login failed.");
-      } else {
-        // Store token in localStorage
-        localStorage.setItem("token", loginData.token);
-        alert("Password created and logged in successfully!");
-        navigate("/dashboard");
-      }
+      // Redirect to login after 2s
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
-      console.error(err);
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Show loading while verifying UID
   if (fetchingEmail) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600 text-sm">Loading account information...</p>
+        <p className="text-gray-600 text-sm">Verifying link...</p>
       </div>
     );
   }
 
+  // If UID invalid
+  if (!uid || error === "Invalid or expired link.") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+        <div className="bg-white p-6 rounded-xl shadow text-center">
+          <p className="text-red-500 mb-4">
+            This password setup link is invalid or expired.
+          </p>
+          <button
+            onClick={() => navigate("/login")}
+            className="bg-[#3C498B] text-white px-4 py-2 rounded-lg"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Main form
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
@@ -135,14 +144,13 @@ const CreatePassword = () => {
             Create Your Password
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Your account has been created by the admin. Please set your password
-            to activate it.
+            Set your password to activate your account.
           </p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email (Read Only) */}
+          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Email Address
@@ -152,7 +160,7 @@ const CreatePassword = () => {
                 type="email"
                 value={email}
                 readOnly
-                className="w-full px-4 py-3 border bg-gray-50 rounded-lg text-sm cursor-not-allowed"
+                className="w-full px-4 py-3 border bg-gray-50 rounded-lg text-sm"
               />
               <Mail size={18} className="absolute right-3 top-3 text-gray-400" />
             </div>
@@ -166,8 +174,7 @@ const CreatePassword = () => {
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#3C498B] focus:outline-none text-sm"
-                placeholder="Enter password"
+                className="w-full px-4 py-3 border rounded-lg text-sm"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -189,8 +196,7 @@ const CreatePassword = () => {
             <div className="relative">
               <input
                 type={showConfirmPassword ? "text" : "password"}
-                className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#3C498B] focus:outline-none text-sm"
-                placeholder="Confirm password"
+                className="w-full px-4 py-3 border rounded-lg text-sm"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -204,31 +210,27 @@ const CreatePassword = () => {
             </div>
           </div>
 
-          {/* Error */}
+          {/* Error & Success Messages */}
           {error && (
             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
               {error}
             </div>
           )}
+          {success && (
+            <div className="bg-green-50 text-green-600 text-sm p-3 rounded-lg">
+              {success}
+            </div>
+          )}
 
-          {/* Submit Button */}
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 rounded-lg text-white font-semibold transition duration-200 ${
-              loading
-                ? "bg-[#3C498B] cursor-not-allowed"
-                : "bg-[#3C498B] hover:bg-[#2A376B]"
-            }`}
+            className="w-full py-3 rounded-lg text-white font-semibold bg-[#3C498B] hover:bg-[#2A376B]"
           >
             {loading ? "Creating Password..." : "Create Password"}
           </button>
         </form>
-
-        {/* Footer */}
-        <p className="text-xs text-gray-400 text-center mt-6">
-          ArcoWorldWide Maintenance Management System
-        </p>
       </div>
     </div>
   );

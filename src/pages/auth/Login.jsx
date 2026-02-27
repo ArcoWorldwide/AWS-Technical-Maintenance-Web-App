@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FiMail, FiLock } from "react-icons/fi";
-
 import { useAuth } from "../../context/AuthContext";
 import { ROLES } from "../../utils/constants/permissions";
 
-// Grab the API base URL from the .env file
+// API base URL from .env
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Login = () => {
@@ -21,6 +20,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -28,6 +28,7 @@ const Login = () => {
     }));
   };
 
+  // Handle login submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -36,9 +37,7 @@ const Login = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -48,19 +47,18 @@ const Login = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle errors from backend
         setError(data.message || "Login failed");
         setLoading(false);
         return;
       }
 
-      // Successful login: store token if returned (optional)
+      // Save token in localStorage
       localStorage.setItem("token", data.token);
 
       // Set role in context
       loginAsRole(formData.role);
 
-      // Navigate to dashboard
+      // Redirect to dashboard
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
@@ -121,9 +119,18 @@ const Login = () => {
                 className="w-full pl-10 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
             </div>
+            {/* Forgot Password Link */}
+            <div className="text-right mt-1">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-[#3C498B] hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            </div>
           </div>
 
-          {/* SUBMIT */}
+          {/* SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={loading}

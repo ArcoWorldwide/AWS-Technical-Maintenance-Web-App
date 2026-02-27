@@ -3,6 +3,8 @@ import LandingPage from "./pages/landingpage";
 import Login from "./pages/auth/Login";
 //import Login from "./pages/auth/Login";
 import CreatePassword from "./pages/auth/CreatePassword";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 import SuperAdminLayout from "./layouts/SuperAdminLayout";
 import ProtectedRoute from "./components/reusables/ProtectedRoute";
@@ -22,7 +24,8 @@ const App = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/createpassword" element={<CreatePassword />} />
-        {/* <Route path="/signup" element={<Signup />} /> */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* PROTECTED DASHBOARD */}
         <Route
