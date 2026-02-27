@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { FiPlus, FiEdit, FiTrash2, FiSearch, FiX } from "react-icons/fi";
 
-// Grab API base URL from env
+// API base URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Roles
@@ -16,18 +16,38 @@ const roleColors = {
   QHSE: "bg-rose-100 text-rose-700",
 };
 
-// Initial users (optional fallback)
-const initialUsers = [];
-
 export default function SuperAdminUsers() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [editingUser, setEditingUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Filtered users for search & role filter
+  const token = localStorage.getItem("token");
+
+  // Fetch users from backend on load
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/auth/users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        setUsers(data);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || "Could not fetch users");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (token) fetchUsers();
+  }, [token]);
+
+  // Filtered users
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
       const matchesSearch =
@@ -38,27 +58,21 @@ export default function SuperAdminUsers() {
     });
   }, [users, search, roleFilter]);
 
-  // Fetch users from backend (optional, if you have GET /users endpoint)
-  // You can implement this if needed:
-  // useEffect(() => { fetchUsers(); }, []);
-
-  // Save user: call backend
+  // Save user (create)
   const saveUser = async (data) => {
     setLoading(true);
     setError("");
-
     try {
       let updatedUsers = [...users];
 
       if (editingUser?.id) {
-        // If editing, update locally only (or call PATCH endpoint if exists)
+        // TODO: implement backend edit (PATCH) if exists
         updatedUsers = updatedUsers.map((u) =>
           u.id === editingUser.id ? { ...u, ...data } : u
         );
       } else {
-        // Create user via backend
-        const token = localStorage.getItem("token"); // Admin token
-        const response = await fetch(`${API_BASE_URL}/auth/users/create`, {
+        // Create user backend call
+        const res = await fetch(`${API_BASE_URL}/auth/users/create`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -67,24 +81,23 @@ export default function SuperAdminUsers() {
           body: JSON.stringify({
             name: data.name,
             email: data.email,
-            role: data.role.toLowerCase(), // lowercase if backend expects it
+            role: data.role.toLowerCase(),
           }),
         });
 
-        if (!response.ok) {
-          const resData = await response.json();
-          throw new Error(resData.message || "Failed to create user.");
+        if (!res.ok) {
+          const resData = await res.json();
+          throw new Error(resData.message || "Failed to create user");
         }
 
-        // Optionally add created user to local state (backend may return the user)
-        updatedUsers = [
-          ...updatedUsers,
-          {
-            ...data,
-            id: Date.now(), // temporary id if backend doesn't return one
-            createdAt: new Date().toISOString().split("T")[0],
-          },
-        ];
+        const newUser = await res.json(); // backend should return created user
+
+        // If backend doesn't return user, fallback:
+        updatedUsers.push({
+          ...data,
+          id: newUser?.id || Date.now(),
+          createdAt: newUser?.createdAt || new Date().toISOString().split("T")[0],
+        });
       }
 
       setUsers(updatedUsers);
@@ -97,10 +110,19 @@ export default function SuperAdminUsers() {
     }
   };
 
-  const deleteUser = (id) => {
-    if (window.confirm("Delete this user?")) {
+  const deleteUser = async (id) => {
+    if (!window.confirm("Delete this user?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/auth/users/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to delete user");
       setUsers((prev) => prev.filter((u) => u.id !== id));
-      // Optionally, call DELETE backend endpoint here
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Could not delete user");
     }
   };
 
